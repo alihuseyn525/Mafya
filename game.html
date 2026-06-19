@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mafiya — Oyun</title>
+  <style>
+    :root {
+      --bg:      #0f0e17;
+      --surface: #1a1825;
+      --surface2:#221f35;
+      --border:  #2e2b45;
+      --accent:  #c9392c;
+      --accent2: #e8643a;
+      --green:   #2ecc71;
+      --yellow:  #f1c40f;
+      --text:    #e8e6f0;
+      --muted:   #7a7890;
+      --radius:  10px;
+      --font-display: 'Georgia', serif;
+      --font-body:    'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .room-code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.18s;
+    }
+    .room-code span { color: var(--text); font-weight: 700; letter-spacing: 0.15em; }
+    .room-code:hover { border-color: var(--accent); }
+
+    /* ── Ana konteyner ── */
+    .main { width: 100%; max-width: 700px; }
+
+    /* ── Ekranlar ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── Kart ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Oyunçu siyahısı ── */
+    .player-list { display: flex; flex-direction: column; gap: 8px; }
+    .player-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: border-color 0.15s, opacity 0.2s;
+      cursor: default;
+    }
+    .player-item.dead { opacity: 0.4; }
+    .player-item.clickable { cursor: pointer; }
+    .player-item.clickable:hover { border-color: var(--accent); }
+    .player-item.selected { border-color: var(--accent2); background: #2a1a18; }
+    .player-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .player-avatar.dead-av { background: var(--border); color: var(--muted); }
+    .player-name { flex: 1; font-size: 0.95rem; }
+    .player-badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .badge-owner { background: #2a2215; color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge-you   { background: #1a2a2a; color: var(--green); border: 1px solid var(--green); }
+    .badge-dead  { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+    .badge-votes { background: #2a1515; color: #ff7070; border: 1px solid #cc3333; min-width: 28px; text-align: center; }
+
+    /* ── Düymələr ── */
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; width: 100%; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 100%;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+    .btn-confirm {
+      background: linear-gradient(135deg, #1a7a40, #27ae60);
+      color: #fff;
+      width: 100%;
+    }
+
+    /* ── Rol kartı ── */
+    .role-card {
+      text-align: center;
+      padding: 28px;
+    }
+    .role-icon { font-size: 3rem; margin-bottom: 12px; }
+    .role-name {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .role-name.mafia    { color: var(--accent); }
+    .role-name.detective{ color: #5dade2; }
+    .role-name.doctor   { color: var(--green); }
+    .role-name.citizen  { color: var(--muted); }
+    .role-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+    .mafia-team { margin-top: 14px; padding: 10px 14px; background: #1e0f0f; border-radius: 8px; border: 1px solid #4a1515; color: var(--accent2); font-size: 0.85rem; }
+
+    /* ── Faza başlığı ── */
+    .phase-header {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .phase-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .phase-title {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .phase-desc { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Timer ── */
+    .timer-bar-wrap {
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .timer-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 1s linear;
+      border-radius: 4px;
+    }
+    .timer-label { text-align: center; color: var(--muted); font-size: 0.8rem; margin-bottom: 16px; }
+
+    /* ── Bildiriş tostu ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 22px;
+      font-size: 0.9rem;
+      color: var(--text);
+      z-index: 999;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Oyun sonu ── */
+    .result-banner {
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .result-icon { font-size: 4rem; margin-bottom: 14px; }
+    .result-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .result-town  { color: var(--green); }
+    .result-mafia { color: var(--accent); }
+    .result-desc  { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .reveal-list  { display: flex; flex-direction: column; gap: 8px; }
+    .reveal-item  {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: 8px;
+    }
+    .reveal-role {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .reveal-role.mafia    { background: #2a0f0f; color: var(--accent);  border: 1px solid var(--accent); }
+    .reveal-role.detective{ background: #0f1e2a; color: #5dade2;        border: 1px solid #5dade2; }
+    .reveal-role.doctor   { background: #0f2a1a; color: var(--green);   border: 1px solid var(--green); }
+    .reveal-role.citizen  { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── Dedektiv nəticəsi ── */
+    .detective-result {
+      padding: 14px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.95rem;
+      margin-top: 12px;
+    }
+    .detective-result.mafia   { background: #2a0f0f; border: 1px solid var(--accent); color: var(--accent2); }
+    .detective-result.innocent{ background: #0f2a1a; border: 1px solid var(--green);  color: var(--green); }
+
+    /* ── Gündüz bildiriş ── */
+    .day-announce {
+      text-align: center;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+    }
+    .day-announce.death   { background: #2a0f0f; border: 1px solid var(--accent); color: #ff8080; }
+    .day-announce.safe    { background: #0f2a1a; border: 1px solid var(--green);  color: var(--green); }
+    .day-announce.nominate{ background: #2a2215; border: 1px solid var(--yellow); color: var(--yellow); }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .header-title { font-size: 1.2rem; }
+      .role-name { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Mafiya</div>
+  <div class="room-code" onclick="copyCode()" title="Kopyala">
+    Kod: <span id="header-code">——</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ══ LOBİ ekranı ══ -->
+  <div id="screen-lobby" class="screen active">
+    <div class="card">
+      <div class="card-title">Otaqdakılar</div>
+      <div class="player-list" id="lobby-players"></div>
+    </div>
+    <div class="card" id="start-card">
+      <button class="btn btn-primary" id="btn-start" onclick="startGame()">Oyunu Başlat</button>
+      <p style="text-align:center;color:var(--muted);font-size:0.8rem;margin-top:10px;" id="start-hint">Minimum 4 oyunçu lazımdır</p>
+    </div>
+    <div class="card" style="text-align:center;color:var(--muted);font-size:0.85rem;" id="waiting-card" style="display:none">
+      Sahibin oyunu başlatmasını gözləyin...
+    </div>
+  </div>
+
+  <!-- ══ ROL ekranı ══ -->
+  <div id="screen-role" class="screen">
+    <div class="card role-card" id="role-card">
+      <div class="role-icon" id="role-icon">🃏</div>
+      <div class="role-name" id="role-name"></div>
+      <div class="role-desc" id="role-desc"></div>
+      <div class="mafia-team" id="mafia-team" style="display:none"></div>
+    </div>
+    <button class="btn btn-confirm" onclick="ackRole()">Anladım, davam et</button>
+  </div>
+
+  <!-- ══ GECƏekranı ══ -->
+  <div id="screen-night" class="screen">
+    <div class="phase-header">
+      <div class="phase-icon">🌙</div>
+      <div class="phase-title">Gecə</div>
+      <div class="phase-desc" id="night-desc">Şəhər yatır...</div>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="night-timer-bar"></div></div>
+    <div class="timer-label" id="night-timer-label"></div>
+
+    <div class="card" id="night-action-card" style="display:none">
+      <div class="card-title" id="night-action-title">Hədəfini seç</div>
+      <div class="player-list" id="night-players"></div>
+      <button class="btn btn-confirm" style="margin-top:14px;" id="btn-night-confirm"
+              onclick="confirmNightAction()" disabled>Təsdiqlə</button>
+    </div>
+
+    <div class="card" id="night-wait-card">
+      <p style="text-align:center;color:var(--muted);">Digər oyunçuları gözləyin...</p>
+    </div>
+
+    <div class="detective-result" id="detective-result" style="display:none"></div>
+  </div>
+
+  <!-- ══ GÜNDÜZ ekranı ══ -->
+  <div id="screen-day" class="screen">
+    <div class="phase-header">
+      <div class="phase-icon">☀️</div>
+      <div class="phase-title">Gündüz</div>
+      <div class="phase-desc">Şəhər oyandı — müzakirə edin!</div>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="day-timer-bar"></div></div>
+    <div class="timer-label" id="day-timer-label"></div>
+
+    <div id="day-announce"></div>
+
+    <div class="card">
+      <div class="card-title">Canlı oyunçular — birini nominasiya et</div>
+      <div class="player-list" id="day-players"></div>
+      <button class="btn btn-primary" style="margin-top:14px;" id="btn-nominate"
+              onclick="nominate()" disabled>Nominasiya et</button>
+    </div>
+  </div>
+
+  <!-- ══ SƏSVERMƏekranı ══ -->
+  <div id="screen-vote" class="screen">
+    <div class="phase-header">
+      <div class="phase-icon">🗳️</div>
+      <div class="phase-title">Səsvermə</div>
+      <div class="phase-desc">Kimi xaric etmək istəyirsiniz?</div>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="vote-timer-bar"></div></div>
+    <div class="timer-label" id="vote-timer-label"></div>
+
+    <div class="card">
+      <div class="card-title">Səsinizi verin</div>
+      <div class="player-list" id="vote-players"></div>
+      <button class="btn btn-primary" style="margin-top:14px;" id="btn-vote"
+              onclick="castVote()" disabled>Səs ver</button>
+    </div>
+  </div>
+
+  <!-- ══ OYUN SONU ekranı ══ -->
+  <div id="screen-ended" class="screen">
+    <div class="card result-banner" id="result-banner"></div>
+    <div class="card">
+      <div class="card-title">Rollar</div>
+      <div class="reveal-list" id="reveal-list"></div>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="goHome()">Ana Səhifəyə Qayıt</button>
+  </div>
+
+</div><!-- /main -->
+
+<div id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── State ────────────────────────────────────────────────
+const myName = sessionStorage.getItem('playerName');
+const roomCode = sessionStorage.getItem('roomCode');
+
+if (!myName || !roomCode) {
+  window.location.href = '/';
+}
+
+document.getElementById('header-code').textContent = roomCode;
+
+let myRole       = null;
+let isOwner      = false;
+let mySocketId   = null;
+let selectedTarget = null;
+let voteTarget   = null;
+let hasActed     = false;
+let hasVoted     = false;
+let timerIntervals = {};
+
+const ROLE_INFO = {
+  mafia:     { icon: '🔪', desc: 'Hər gecə bir vətəndaşı öldürürsünüz. Şəhəri aldatmaq sizin əsas silahınızdır.',     color: 'mafia'     },
+  detective: { icon: '🔍', desc: 'Hər gecə bir oyunçunu yoxlaya bilərsiniz — Mafiyamı, yoxsa deyil?',                    color: 'detective' },
+  doctor:    { icon: '💉', desc: 'Hər gecə bir oyunçunu qoruyursunuz. Özünüzü də qoruya bilərsiniz.',                    color: 'doctor'    },
+  citizen:   { icon: '👤', desc: 'Şəhəri qoruyun. Müzakirədə Mafiya üzvlərini tapın və xaric edin.',                    color: 'citizen'   },
+};
+
+// ── Socket ───────────────────────────────────────────────
+const socket = io();
+
+socket.on('connect', () => {
+  mySocketId = socket.id;
+  socket.emit('room:rejoin', { code: roomCode, name: myName }, (res) => {
+    if (!res.ok) { alert(res.error); window.location.href = '/'; return; }
+
+    isOwner = res.owner === socket.id;
+    updateLobby({ players: res.players, owner: res.owner });
+
+    if (res.phase === 'lobby') showScreen('lobby');
+    // Digər fazalar reconnect üçün server tərəfindən event göndərəcək
+  });
+});
+
+// ── Room events ──────────────────────────────────────────
+socket.on('room:update', ({ players, owner }) => {
+  isOwner = owner === socket.id;
+  updateLobby({ players, owner });
+});
+
+socket.on('player:left', ({ name }) => {
+  toast(`${name} otaqdan çıxdı`);
+});
+
+// ── Game events ──────────────────────────────────────────
+socket.on('game:started', ({ playerCount }) => {
+  toast(`Oyun başladı! ${playerCount} oyunçu`);
+});
+
+socket.on('game:role', ({ role, roleName, mafiaTeam }) => {
+  myRole = role;
+  showRoleScreen(role, roleName, mafiaTeam);
+});
+
+socket.on('phase:night', ({ players }) => {
+  showNightScreen(players);
+});
+
+socket.on('phase:day', ({ killedName, players }) => {
+  showDayScreen(killedName, players);
+});
+
+socket.on('phase:vote', ({ players }) => {
+  showVoteScreen(players);
+});
+
+socket.on('vote:update', ({ nominations }) => {
+  updateVoteBadges(nominations);
+});
+
+socket.on('vote:result', ({ eliminatedName }) => {
+  if (eliminatedName) toast(`${eliminatedName} xaric edildi`);
+  else toast('Heç kim xaric edilmədi');
+});
+
+socket.on('day:nominated', ({ nominator, targetName }) => {
+  const ann = document.getElementById('day-announce');
+  ann.innerHTML = `<div class="day-announce nominate">⚠️ ${nominator}, ${targetName}-i nominasiya etdi</div>`;
+});
+
+socket.on('detective:result', ({ targetName, isMafia }) => {
+  const el = document.getElementById('detective-result');
+  el.style.display = 'block';
+  if (isMafia) {
+    el.className = 'detective-result mafia';
+    el.textContent = `🔴 ${targetName} — Mafiya üzvüdür!`;
+  } else {
+    el.className = 'detective-result innocent';
+    el.textContent = `🟢 ${targetName} — Masum vətəndaşdır`;
+  }
+});
+
+socket.on('game:ended', ({ winner, rolesReveal }) => {
+  showEndScreen(winner, rolesReveal);
+});
+
+// ── Screens ──────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function updateLobby({ players, owner }) {
+  const list = document.getElementById('lobby-players');
+  list.innerHTML = players.map(p => {
+    const badges = [];
+    if (p.id === owner)    badges.push('<span class="player-badge badge-owner">Sahib</span>');
+    if (p.id === socket.id) badges.push('<span class="player-badge badge-you">Sən</span>');
+    return `<div class="player-item">
+      <div class="player-avatar">${p.name[0].toUpperCase()}</div>
+      <div class="player-name">${p.name}</div>
+      ${badges.join('')}
+    </div>`;
+  }).join('');
+
+  const startCard   = document.getElementById('start-card');
+  const waitingCard = document.getElementById('waiting-card');
+  const btnStart    = document.getElementById('btn-start');
+  const hint        = document.getElementById('start-hint');
+
+  if (isOwner) {
+    startCard.style.display   = 'block';
+    waitingCard.style.display = 'none';
+    btnStart.disabled = players.length < 4;
+    hint.textContent = players.length < 4
+      ? `Minimum 4 oyunçu lazımdır (${players.length}/4)`
+      : `${players.length} oyunçu hazırdır`;
+  } else {
+    startCard.style.display   = 'none';
+    waitingCard.style.display = 'block';
+  }
+}
+
+function showRoleScreen(role, roleName, mafiaTeam) {
+  const info = ROLE_INFO[role] || { icon: '🃏', desc: '', color: '' };
+  document.getElementById('role-icon').textContent   = info.icon;
+  document.getElementById('role-name').textContent   = roleName;
+  document.getElementById('role-name').className     = 'role-name ' + info.color;
+  document.getElementById('role-desc').textContent   = info.desc;
+
+  const mt = document.getElementById('mafia-team');
+  if (role === 'mafia' && mafiaTeam.length > 0) {
+    mt.style.display = 'block';
+    mt.textContent   = '🤝 Mafia partnyorlarınız: ' + mafiaTeam.join(', ');
+  } else {
+    mt.style.display = 'none';
+  }
+
+  showScreen('role');
+}
+
+function ackRole() {
+  // Rol ekranından sonra gecəni gözlə (server event göndərəcək)
+  // Əgər artıq gecə eventı gəlibsə keçid etmişdir
+  showScreen('night');
+  // Əgər night screen artıq aktivdirsə — heç nə
+}
+
+function showNightScreen(players) {
+  hasActed = false;
+  selectedTarget = null;
+  document.getElementById('detective-result').style.display = 'none';
+
+  const actionCard = document.getElementById('night-action-card');
+  const waitCard   = document.getElementById('night-wait-card');
+
+  const actionable = ['mafia', 'detective', 'doctor'].includes(myRole);
+  const myPlayer   = players.find(p => p.id === socket.id);
+  const iAmAlive   = myPlayer?.alive !== false;
+
+  if (actionable && iAmAlive) {
+    actionCard.style.display = 'block';
+    waitCard.style.display   = 'none';
+
+    const titles = { mafia: '🔪 Kimi öldürmək istəyirsiniz?', detective: '🔍 Kimi yoxlamaq istəyirsiniz?', doctor: '💉 Kimi qorumaq istəyirsiniz?' };
+    document.getElementById('night-action-title').textContent = titles[myRole];
+
+    const targets = players.filter(p => p.alive && p.id !== socket.id);
+    const list = document.getElementById('night-players');
+    list.innerHTML = targets.map(p => `
+      <div class="player-item clickable" data-id="${p.id}" onclick="selectNightTarget(this, '${p.id}')">
+        <div class="player-avatar">${p.name[0].toUpperCase()}</div>
+        <div class="player-name">${p.name}</div>
+      </div>`).join('');
+    document.getElementById('btn-night-confirm').disabled = true;
+  } else {
+    actionCard.style.display = 'none';
+    waitCard.style.display   = 'block';
+  }
+
+  document.getElementById('night-desc').textContent =
+    iAmAlive ? 'Gecə başladı. Rolunuza görə hərəkət edin.' : 'Siz ölmüsünüz. Gecəni seyr edin.';
+
+  startTimer('night', 40, () => {});
+  showScreen('night');
+}
+
+function selectNightTarget(el, id) {
+  document.querySelectorAll('#night-players .player-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTarget = id;
+  document.getElementById('btn-night-confirm').disabled = false;
+}
+
+function confirmNightAction() {
+  if (!selectedTarget || hasActed) return;
+  hasActed = true;
+  socket.emit('night:action', { targetId: selectedTarget });
+  document.getElementById('btn-night-confirm').disabled = true;
+  document.getElementById('btn-night-confirm').textContent = '✓ Göndərildi';
+  toast('Seçiminiz qeyd edildi');
+}
+
+function showDayScreen(killedName, players) {
+  selectedTarget = null;
+  stopAllTimers();
+
+  const ann = document.getElementById('day-announce');
+  if (killedName) {
+    ann.innerHTML = `<div class="day-announce death">💀 Bu gecə <strong>${killedName}</strong> öldürüldü!</div>`;
+  } else {
+    ann.innerHTML = `<div class="day-announce safe">🛡️ Bu gecə heç kim öldürülmədi!</div>`;
+  }
+
+  const myPlayer = players.find(p => p.id === socket.id);
+  const iAmAlive = myPlayer?.alive !== false;
+
+  const list = document.getElementById('day-players');
+  list.innerHTML = players.map(p => {
+    const dead = !p.alive;
+    const isMe = p.id === socket.id;
+    const clickable = iAmAlive && !dead && !isMe && p.id !== socket.id;
+    return `<div class="player-item ${dead ? 'dead' : ''} ${clickable ? 'clickable' : ''}"
+              data-id="${p.id}" ${clickable ? `onclick="selectDayTarget(this,'${p.id}')"` : ''}>
+      <div class="player-avatar ${dead ? 'dead-av' : ''}">${p.name[0].toUpperCase()}</div>
+      <div class="player-name">${p.name}${isMe ? ' (sən)' : ''}</div>
+      ${dead ? '<span class="player-badge badge-dead">Ölü</span>' : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('btn-nominate').disabled = true;
+  startTimer('day', 60, () => {});
+  showScreen('day');
+}
+
+function selectDayTarget(el, id) {
+  document.querySelectorAll('#day-players .player-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTarget = id;
+  document.getElementById('btn-nominate').disabled = false;
+}
+
+function nominate() {
+  if (!selectedTarget) return;
+  socket.emit('day:nominate', { targetId: selectedTarget });
+  document.getElementById('btn-nominate').disabled = true;
+  toast('Nominasiya göndərildi');
+}
+
+function showVoteScreen(players) {
+  voteTarget = null;
+  hasVoted   = false;
+  stopAllTimers();
+
+  const myPlayer = players.find(p => p.id === socket.id);
+  const iAmAlive = myPlayer?.alive !== false;
+
+  const list = document.getElementById('vote-players');
+  list.innerHTML = players.filter(p => p.alive).map(p => {
+    const isMe = p.id === socket.id;
+    const clickable = iAmAlive && !isMe;
+    return `<div class="player-item ${clickable ? 'clickable' : ''}" id="vote-item-${p.id}"
+              data-id="${p.id}" ${clickable ? `onclick="selectVoteTarget(this,'${p.id}')"` : ''}>
+      <div class="player-avatar">${p.name[0].toUpperCase()}</div>
+      <div class="player-name">${p.name}${isMe ? ' (sən)' : ''}</div>
+      <span class="player-badge badge-votes" id="votes-${p.id}">0</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('btn-vote').disabled = true;
+  startTimer('vote', 30, () => {});
+  showScreen('vote');
+}
+
+function selectVoteTarget(el, id) {
+  document.querySelectorAll('#vote-players .player-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  voteTarget = id;
+  document.getElementById('btn-vote').disabled = false;
+}
+
+function castVote() {
+  if (!voteTarget || hasVoted) return;
+  hasVoted = true;
+  socket.emit('vote:cast', { targetId: voteTarget });
+  document.getElementById('btn-vote').disabled = true;
+  document.getElementById('btn-vote').textContent = '✓ Səs verildi';
+  toast('Səsiniz qeyd edildi');
+}
+
+function updateVoteBadges(nominations) {
+  Object.entries(nominations).forEach(([tid, count]) => {
+    const el = document.getElementById('votes-' + tid);
+    if (el) el.textContent = count;
+  });
+}
+
+function showEndScreen(winner, rolesReveal) {
+  stopAllTimers();
+  const banner = document.getElementById('result-banner');
+  const isWinnerMafia = winner === 'mafia';
+  banner.innerHTML = `
+    <div class="result-icon">${isWinnerMafia ? '🔪' : '🏆'}</div>
+    <div class="result-title ${isWinnerMafia ? 'result-mafia' : 'result-town'}">
+      ${isWinnerMafia ? 'Mafiya Qalib Gəldi!' : 'Şəhər Qurtarıldı!'}
+    </div>
+    <div class="result-desc">${isWinnerMafia ? 'Mafiya şəhəri ələ keçirdi.' : 'Bütün Mafiya üzvləri xaric edildi!'}</div>
+  `;
+
+  const revealList = document.getElementById('reveal-list');
+  revealList.innerHTML = rolesReveal.map(p => `
+    <div class="reveal-item">
+      <div class="player-avatar ${!p.alive ? 'dead-av' : ''}">${p.name[0].toUpperCase()}</div>
+      <div class="player-name" style="${!p.alive ? 'opacity:0.5' : ''}">${p.name}</div>
+      <span class="reveal-role ${p.role}">${p.roleName}</span>
+      ${!p.alive ? '<span class="player-badge badge-dead">Ölü</span>' : ''}
+    </div>`).join('');
+
+  showScreen('ended');
+}
+
+// ── Game start (owner) ───────────────────────────────────
+function startGame() {
+  socket.emit('game:start', {}, (res) => {
+    if (!res?.ok) toast(res?.error || 'Xəta baş verdi');
+  });
+}
+
+// ── Timer ────────────────────────────────────────────────
+function startTimer(name, totalSec, onEnd) {
+  stopTimer(name);
+  let remaining = totalSec;
+  const bar   = document.getElementById(name + '-timer-bar');
+  const label = document.getElementById(name + '-timer-label');
+  if (bar)   bar.style.width = '100%';
+  if (label) label.textContent = `${remaining} saniyə`;
+
+  timerIntervals[name] = setInterval(() => {
+    remaining--;
+    if (bar)   bar.style.width = (remaining / totalSec * 100) + '%';
+    if (label) label.textContent = `${remaining} saniyə`;
+    if (remaining <= 0) { stopTimer(name); onEnd(); }
+  }, 1000);
+}
+
+function stopTimer(name)  { clearInterval(timerIntervals[name]); }
+function stopAllTimers()  { Object.keys(timerIntervals).forEach(stopTimer); }
+
+// ── Utilities ────────────────────────────────────────────
+function copyCode() {
+  navigator.clipboard.writeText(roomCode).then(() => toast('Kod kopyalandı: ' + roomCode));
+}
+
+function goHome() {
+  sessionStorage.clear();
+  window.location.href = '/';
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
