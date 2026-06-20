@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mafiya — Oyun</title>
+  <style>
+    :root{
+      --bg:#0f0e17;--surface:#1a1825;--surface2:#221f35;--border:#2e2b45;
+      --accent:#c9392c;--accent2:#e8643a;--green:#2ecc71;--yellow:#f1c40f;
+      --blue:#5dade2;--purple:#9b59b6;--orange:#e67e22;
+      --text:#e8e6f0;--muted:#7a7890;--radius:10px;
+      --font-display:'Georgia',serif;--font-body:'Segoe UI',system-ui,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-body);
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px}
+
+    /* Header */
+    .header{width:100%;max-width:720px;display:flex;align-items:center;
+      justify-content:space-between;margin-bottom:20px;gap:10px}
+    .header-title{font-family:var(--font-display);font-size:1.4rem;
+      letter-spacing:.1em;text-transform:uppercase}
+    .room-code{background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);padding:6px 14px;font-size:.82rem;color:var(--muted);
+      cursor:pointer;user-select:none;transition:border-color .18s;white-space:nowrap}
+    .room-code span{color:var(--text);font-weight:700;letter-spacing:.15em}
+    .room-code:hover{border-color:var(--accent)}
+
+    /* Main */
+    .main{width:100%;max-width:720px}
+    .screen{display:none}.screen.active{display:block}
+
+    /* Card */
+    .card{background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);padding:20px 22px;margin-bottom:14px}
+    .card-title{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:14px}
+
+    /* Player list */
+    .player-list{display:flex;flex-direction:column;gap:7px}
+    .player-item{display:flex;align-items:center;gap:10px;padding:10px 13px;
+      background:var(--surface2);border-radius:8px;border:1px solid transparent;
+      transition:border-color .15s,opacity .2s}
+    .player-item.dead{opacity:.38}
+    .player-item.offline{opacity:.5}
+    .player-item.clickable{cursor:pointer}
+    .player-item.clickable:hover{border-color:var(--accent)}
+    .player-item.selected{border-color:var(--accent2);background:#2a1a18}
+    .avatar{width:33px;height:33px;border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:.88rem;flex-shrink:0;color:#fff}
+    .avatar.dead-av{background:var(--border);color:var(--muted)}
+    .avatar.offline-av{background:#2a2840;color:var(--muted)}
+    .pname{flex:1;font-size:.93rem}
+    .badges{display:flex;gap:5px;flex-wrap:wrap}
+    .badge{font-size:.68rem;padding:2px 7px;border-radius:20px;font-weight:600;
+      letter-spacing:.04em;white-space:nowrap}
+    .b-owner{background:#2a2215;color:var(--yellow);border:1px solid var(--yellow)}
+    .b-you{background:#1a2a2a;color:var(--green);border:1px solid var(--green)}
+    .b-dead{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+    .b-offline{background:#1e1c30;color:var(--muted);border:1px solid var(--border)}
+    .b-votes{background:#2a1515;color:#ff7070;border:1px solid #cc3333;min-width:26px;text-align:center}
+
+    /* Buttons */
+    .btn{padding:12px 18px;border:none;border-radius:var(--radius);font-size:.93rem;
+      font-weight:700;cursor:pointer;transition:opacity .18s,transform .1s;letter-spacing:.03em}
+    .btn:active{transform:scale(.97)}
+    .btn:disabled{opacity:.32;cursor:not-allowed}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;width:100%}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);width:100%}
+    .btn-ghost:hover{border-color:var(--accent);color:var(--text)}
+    .btn-confirm{background:linear-gradient(135deg,#1a7a40,#27ae60);color:#fff;width:100%}
+    .btn-warn{background:linear-gradient(135deg,#7a1a1a,#c0392b);color:#fff;width:100%}
+    .btn-yellow{background:linear-gradient(135deg,#7a5a00,var(--yellow));color:#000;width:100%}
+
+    /* Role card */
+    .role-card{text-align:center;padding:28px 20px}
+    .role-icon{font-size:3.5rem;margin-bottom:10px}
+    .role-name{font-family:var(--font-display);font-size:1.9rem;letter-spacing:.08em;margin-bottom:6px}
+    .role-name.mafia{color:var(--accent)}
+    .role-name.detective{color:var(--blue)}
+    .role-name.doctor{color:var(--green)}
+    .role-name.citizen{color:var(--muted)}
+    .role-name.mayor{color:var(--yellow)}
+    .role-name.maniac{color:var(--purple)}
+    .role-name.serialkiller{color:#e74c3c}
+    .role-name.thief{color:var(--orange)}
+    .role-name.police{color:var(--blue)}
+    .role-name.lookout{color:var(--blue)}
+    .role-name.trapper{color:var(--yellow)}
+    .role-name.snitch{color:var(--yellow)}
+    .role-name.provoker{color:var(--orange)}
+    .role-name.tracker{color:var(--blue)}
+    .role-name.cleaner{color:var(--accent)}
+    .role-name.blame{color:var(--accent)}
+    .role-name.roleblocker{color:var(--accent)}
+    .role-name.bomber{color:#e74c3c}
+    .role-name.haunter{color:var(--purple)}
+    .role-name.survivor{color:var(--green)}
+    .role-side-badge{display:inline-block;margin-bottom:12px;padding:5px 16px;
+      border-radius:20px;font-size:.8rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+    .side-good{background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .side-bad{background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+    .side-neutral{background:#1e1535;border:1px solid var(--purple);color:var(--purple)}
+    .role-desc{color:var(--muted);font-size:.9rem;line-height:1.65;margin-bottom:4px}
+    .role-objective{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.85rem;
+      font-weight:600;text-align:center}
+    .obj-good{background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .obj-bad{background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+    .obj-neutral{background:#1e1535;border:1px solid var(--purple);color:var(--purple)}
+    .mafia-team-box{margin-top:12px;padding:10px 14px;background:#1e0f0f;
+      border-radius:8px;border:1px solid #4a1515;color:var(--accent2);font-size:.84rem}
+
+    /* Admin panel */
+    .admin-btn{position:fixed;top:14px;right:14px;z-index:500;
+      background:rgba(30,28,48,.92);border:1px solid var(--border);
+      border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:700;
+      color:var(--muted);cursor:pointer;letter-spacing:.05em;transition:all .2s}
+    .admin-btn:hover{border-color:var(--accent);color:var(--text)}
+    .admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;
+      display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto}
+    .admin-overlay.open{display:flex}
+    .admin-panel{background:var(--surface);border:1px solid var(--border);
+      border-radius:14px;width:100%;max-width:480px;padding:20px;margin-top:8px}
+    .admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .admin-title{font-family:var(--font-display);font-size:1.1rem;letter-spacing:.06em}
+    .admin-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:0 4px}
+    .admin-section{margin-bottom:18px}
+    .admin-section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
+    .admin-count-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .admin-count-label{flex:1;font-size:.88rem}
+    .admin-count-val{font-weight:700;font-size:1rem;width:24px;text-align:center}
+    .admin-cnt-btn{width:30px;height:30px;border:1px solid var(--border);background:var(--surface2);
+      color:var(--text);border-radius:6px;font-size:1rem;cursor:pointer}
+    .admin-cnt-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .admin-roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+    .admin-role-card{background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:10px;cursor:pointer;transition:border-color .15s;position:relative}
+    .admin-role-card:hover{border-color:var(--accent2)}
+    .admin-role-card.picked{border-color:var(--green)}
+    .admin-role-name{font-size:.82rem;font-weight:700;margin-bottom:2px}
+    .admin-role-desc{font-size:.7rem;color:var(--muted);line-height:1.3}
+    .admin-role-team{font-size:.65rem;padding:2px 6px;border-radius:10px;
+      font-weight:700;display:inline-block;margin-bottom:5px}
+    .ateam-good{background:#0f2a1a;color:var(--green);border:1px solid var(--green)}
+    .ateam-bad{background:#2a0f0f;color:var(--accent);border:1px solid var(--accent)}
+    .ateam-neutral{background:#1e1535;color:var(--purple);border:1px solid var(--purple)}
+    .admin-sim-btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:.9rem;
+      font-weight:700;cursor:pointer;margin-bottom:8px}
+    .admin-sim-primary{background:linear-gradient(135deg,#1a5a2a,var(--green));color:#fff}
+    .admin-sim-warn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+    .admin-log{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      padding:10px;font-size:.78rem;color:var(--muted);max-height:180px;overflow-y:auto;
+      line-height:1.7;white-space:pre-wrap}
+    .admin-sep{border:none;border-top:1px solid var(--border);margin:14px 0}
+    /* Solo mode switcher */
+    .solo-panel{position:fixed;bottom:0;left:0;right:0;z-index:400;
+      background:rgba(15,14,23,.97);border-top:1px solid var(--border);
+      padding:10px 14px;display:none}
+    .solo-panel.visible{display:block}
+    .solo-panel-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--muted);margin-bottom:7px;text-align:center}
+    .solo-players-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;
+      scrollbar-width:none}
+    .solo-player-chip{flex-shrink:0;padding:7px 12px;border-radius:20px;
+      border:1px solid var(--border);background:var(--surface2);font-size:.78rem;
+      font-weight:600;cursor:pointer;transition:all .15s;text-align:center;min-width:70px}
+    .solo-player-chip.current{border-color:var(--accent);color:var(--accent)}
+    .solo-player-chip.dead{opacity:.35;cursor:default}
+    .chip-role{font-size:.62rem;color:var(--muted);display:block;margin-top:1px}
+    /* Solo night/vote overlay box */
+    .solo-night-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+      padding:20px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+    .solo-night-who{font-size:1rem;font-weight:700;margin-bottom:6px;display:flex;
+      align-items:center;gap:8px;flex-wrap:wrap}
+    .solo-night-desc{color:var(--muted);font-size:.85rem;margin-bottom:14px}
+    .solo-night-targets{display:flex;flex-direction:column;gap:6px}
+    .solo-target-item{display:flex;align-items:center;gap:10px;padding:10px 12px;
+      border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s}
+    .solo-target-item:hover{border-color:var(--accent2)}
+    .solo-target-item.selected{border-color:var(--accent);background:#1e0a0a}
+    .solo-virt-badge{font-size:.65rem;padding:2px 7px;border-radius:10px;
+      background:#1e1535;border:1px solid var(--purple);color:var(--purple);font-weight:700}
+    .solo-admin-badge{font-size:.65rem;padding:2px 7px;border-radius:10px;
+      background:#0f2a1a;border:1px solid var(--green);color:var(--green);font-weight:700}
+    .admin-tab{flex:1;padding:8px;border:1px solid var(--border);background:var(--surface2);
+      color:var(--muted);border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s}
+    .admin-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+    .admin-dist-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+    .admin-dist-row:last-child{border-bottom:none}
+    .admin-dist-icon{font-size:1.1rem;width:22px;text-align:center}
+    .admin-dist-name{flex:1;font-size:.82rem}
+    .admin-dist-team{font-size:.65rem;padding:1px 5px;border-radius:8px;font-weight:700}
+    .admin-dist-cnt{font-weight:700;font-size:.95rem;width:20px;text-align:center}
+    .admin-dist-btn{width:26px;height:26px;border:1px solid var(--border);background:var(--surface);
+      color:var(--text);border-radius:5px;font-size:.9rem;cursor:pointer;line-height:1}
+    .admin-dist-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* Phase header */
+    .phase-header{text-align:center;padding:18px 10px;margin-bottom:14px}
+    .phase-icon{font-size:2.4rem;margin-bottom:7px}
+    .phase-title{font-family:var(--font-display);font-size:1.55rem;letter-spacing:.06em;margin-bottom:5px}
+    .phase-desc{color:var(--muted);font-size:.87rem}
+
+    /* Timer */
+    .timer-wrap{background:var(--surface2);border-radius:4px;height:5px;overflow:hidden;margin-bottom:12px}
+    .timer-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+      transition:width 1s linear;border-radius:4px}
+    .timer-label{text-align:center;color:var(--muted);font-size:.78rem;margin-bottom:14px}
+
+    /* Announce banners */
+    .announce{padding:13px 16px;border-radius:8px;margin-bottom:12px;font-size:.9rem;text-align:center}
+    .ann-death{background:#2a0f0f;border:1px solid var(--accent);color:#ff9090}
+    .ann-safe{background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .ann-nominate{background:#2a2215;border:1px solid var(--yellow);color:var(--yellow)}
+    .ann-info{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+
+    /* Detective result */
+    .det-result{padding:13px;border-radius:8px;text-align:center;font-size:.92rem;margin-top:12px}
+    .det-mafia{background:#2a0f0f;border:1px solid var(--accent);color:var(--accent2)}
+    .det-innocent{background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+
+    /* Thief result */
+    .thief-result{padding:13px;border-radius:8px;text-align:center;font-size:.92rem;margin-top:12px;
+      background:#2a1a0a;border:1px solid var(--orange);color:var(--orange)}
+
+    /* Game end */
+    .result-banner{text-align:center;padding:30px 18px}
+    .result-icon{font-size:3.8rem;margin-bottom:12px}
+    .result-title{font-family:var(--font-display);font-size:2rem;letter-spacing:.08em;margin-bottom:7px}
+    .result-town{color:var(--green)}.result-mafia{color:var(--accent)}
+    .result-maniac{color:var(--purple)}.result-sk{color:#e74c3c}.result-desc{color:var(--muted);font-size:.88rem}
+    .reveal-list{display:flex;flex-direction:column;gap:7px}
+    .reveal-item{display:flex;align-items:center;gap:10px;padding:10px 13px;
+      background:var(--surface2);border-radius:8px}
+    .reveal-role{font-size:.7rem;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+    .rr-mafia{background:#2a0f0f;color:var(--accent);border:1px solid var(--accent)}
+    .rr-detective{background:#0f1e2a;color:var(--blue);border:1px solid var(--blue)}
+    .rr-doctor{background:#0f2a1a;color:var(--green);border:1px solid var(--green)}
+    .rr-citizen{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+    .rr-mayor{background:#2a2200;color:var(--yellow);border:1px solid var(--yellow)}
+    .rr-maniac{background:#1e0f2a;color:var(--purple);border:1px solid var(--purple)}
+    .rr-serialkiller{background:#2a0505;color:#e74c3c;border:1px solid #e74c3c}
+    .rr-thief{background:#2a1500;color:var(--orange);border:1px solid var(--orange)}
+
+    /* Host config panel */
+    .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .config-item{background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+    .config-role-name{font-size:.82rem;font-weight:600}
+    .config-role-desc{font-size:.72rem;color:var(--muted);line-height:1.3}
+    .config-input-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+    .config-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--surface);
+      color:var(--text);border-radius:6px;font-size:1rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .config-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .config-count{flex:1;text-align:center;font-weight:700;font-size:1rem}
+    .config-total{text-align:center;font-size:.82rem;padding:8px;border-radius:8px;
+      background:var(--surface2);border:1px solid var(--border)}
+    .config-total.ok{border-color:var(--green);color:var(--green)}
+    .config-total.bad{border-color:var(--accent);color:var(--accent)}
+
+    .header-role-badge{font-size:.72rem;font-weight:700;padding:3px 9px;
+      border-radius:12px;letter-spacing:.04em;flex:1;text-align:center}
+    .hrb-good    {background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .hrb-bad     {background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+    .hrb-neutral {background:#1e1535;border:1px solid var(--purple);color:var(--purple)}
+
+    .ability-result-box{padding:13px 16px;border-radius:8px;margin-top:10px;
+      font-size:.9rem;text-align:center;line-height:1.5;font-weight:500}
+    .ab-lookout  {background:#0d1e2a;border:1px solid var(--blue);color:var(--blue)}
+    .ab-tracker  {background:#0d1e2a;border:1px solid var(--blue);color:var(--blue)}
+    .ab-trapper  {background:#2a2010;border:1px solid var(--yellow);color:var(--yellow)}
+    .ab-trap-caught{background:#1a2a10;border:1px solid var(--green);color:var(--green)}
+    .ab-snitch   {background:#1e0f2a;border:1px solid var(--purple);color:var(--purple)}
+    .ab-provoker {background:#2a1800;border:1px solid var(--orange);color:var(--orange)}
+    .ab-survivor {background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .ab-haunter  {background:#1e0f2a;border:1px solid var(--purple);color:var(--purple)}
+    .ab-roleblocker{background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+    .ab-police   {background:#0d1e2a;border:1px solid var(--blue);color:var(--blue)}
+    .ab-bomber   {background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+    .ab-info     {background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+    .mod-panel{position:fixed;bottom:0;left:0;right:0;background:#12101f;
+      border-top:1px solid var(--border);padding:12px 16px;
+      display:none;gap:10px;z-index:100;max-width:720px;margin:0 auto}
+    .mod-panel.visible{display:flex}
+    .mod-btn{flex:1;padding:10px;border:none;border-radius:var(--radius);
+      font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .18s}
+    .mod-next{background:linear-gradient(135deg,#1a5a7a,#2980b9);color:#fff}
+    .mod-elim{background:linear-gradient(135deg,#7a1a1a,var(--accent));color:#fff}
+    .mod-btn:disabled{opacity:.35;cursor:not-allowed}
+
+    /* Toast */
+    #toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%) translateY(80px);
+      background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+      padding:11px 20px;font-size:.88rem;color:var(--text);z-index:999;
+      transition:transform .3s ease;white-space:nowrap;max-width:90vw;text-align:center}
+    #toast.show{transform:translateX(-50%) translateY(0)}
+
+    @media(max-width:480px){
+      .config-grid{grid-template-columns:1fr}
+      .header-title{font-size:1.1rem}
+      .admin-roles-grid{grid-template-columns:1fr}
+      body{padding:14px 10px 70px}
+      .role-name{font-size:1.6rem}
+      .role-icon{font-size:3rem}
+      .btn{padding:13px 14px;font-size:.9rem}
+      .card{padding:16px 14px}
+      .phase-title{font-size:1.3rem}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Admin button removed: only available on index.html -->
+<!-- Admin Overlay -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-panel">
+    <div class="admin-header">
+      <div class="admin-title">🛠️ Admin Paneli</div>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="admin-tab active" id="atab-roles" onclick="adminTab('roles')">📋 Rollar</button>
+      <button class="admin-tab" id="atab-sim" onclick="adminTab('sim')">🎮 Simulyasiya</button>
+    </div>
+
+    <!-- ROLES TAB -->
+    <div id="admin-tab-roles">
+      <div class="admin-section-title">Rol seçin — izahatı görün</div>
+      <div class="admin-roles-grid" id="admin-roles-grid"></div>
+
+      <div id="admin-role-detail" style="display:none;margin-top:12px">
+        <div class="admin-log" id="admin-role-log"></div>
+        <button class="admin-sim-btn admin-sim-primary" style="margin-top:8px" onclick="adminTestRole()">👁️ Rol ekranını test et</button>
+      </div>
+    </div>
+
+    <!-- SIM TAB -->
+    <div id="admin-tab-sim" style="display:none">
+      <div class="admin-section-title">Oyunçu sayı</div>
+      <div class="admin-count-row" style="margin-bottom:14px">
+        <span class="admin-count-label">Oyunçu sayı:</span>
+        <button class="admin-cnt-btn" onclick="adminChangeCount(-1)">−</button>
+        <span class="admin-count-val" id="admin-count">6</span>
+        <button class="admin-cnt-btn" onclick="adminChangeCount(1)">+</button>
+      </div>
+
+      <div class="admin-section-title">Rollara görə paylanma</div>
+      <div id="admin-dist-grid" style="margin-bottom:12px"></div>
+      <div class="admin-log" id="admin-dist-status" style="margin-bottom:10px"></div>
+
+      <button class="admin-sim-btn admin-sim-primary" onclick="adminRunSim()">🎲 Paylaşdır və göstər</button>
+      <div class="admin-log" id="admin-sim-log" style="display:none;margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-title">Mafiya</div>
+  <div id="header-role-badge" style="display:none" class="header-role-badge"></div>
+  <div class="room-code" onclick="copyCode()">Kod: <span id="header-code">——</span></div>
+</div>
+
+<div class="main">
+
+  <!-- ══ LOBİ ══ -->
+  <div id="screen-lobby" class="screen active">
+    <div class="card">
+      <div class="card-title">Otaqdakılar</div>
+      <div class="player-list" id="lobby-players"></div>
+    </div>
+
+    <!-- Host: Rol konfiqurasiyası -->
+    <div class="card" id="config-card" style="display:none">
+      <div class="card-title">Rol Konfiqurasiyası</div>
+      <div class="config-grid" id="config-grid"></div>
+      <div class="config-total" id="config-total" style="margin-top:12px"></div>
+      <button class="btn btn-yellow" style="margin-top:12px" onclick="saveConfig()">Konfiqurasiyanı Saxla</button>
+    </div>
+
+    <!-- Host: Başlat -->
+    <div id="owner-start" style="display:none">
+      <button class="btn btn-primary" id="btn-start" onclick="startGame()">Oyunu Başlat</button>
+      <p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:8px" id="start-hint"></p>
+    </div>
+
+    <!-- Non-host: Gözlə -->
+    <div id="guest-wait" style="display:none">
+      <div class="card" style="text-align:center;color:var(--muted);font-size:.88rem;padding:16px">
+        Sahibin oyunu başlatmasını gözləyin...
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ROL ══ -->
+  <div id="screen-role" class="screen">
+    <div class="card role-card" id="role-card">
+      <div class="role-icon" id="role-icon">🃏</div>
+      <div class="role-side-badge" id="role-side-badge"></div>
+      <div class="role-name" id="role-name"></div>
+      <div class="role-desc" id="role-desc"></div>
+      <div class="role-objective" id="role-objective"></div>
+      <div class="mafia-team-box" id="mafia-team-box" style="display:none"></div>
+    </div>
+    <button class="btn btn-confirm" onclick="ackRole()">Anladım, davam et →</button>
+  </div>
+
+  <!-- ══ GECƏ ══ -->
+  <div id="screen-night" class="screen">
+    <div class="phase-header">
+      <div class="phase-icon">🌙</div>
+      <div class="phase-title">Gecə</div>
+      <div class="phase-desc" id="night-desc">Şəhər yatır...</div>
+    </div>
+    <div class="timer-wrap"><div class="timer-bar" id="night-bar" style="width:100%"></div></div>
+    <div class="timer-label" id="night-label"></div>
+
+    <div class="card" id="night-action-card" style="display:none">
+      <div class="card-title" id="night-action-title">Hədəfini seç</div>
+      <div class="player-list" id="night-players"></div>
+      <button class="btn btn-confirm" style="margin-top:12px" id="btn-night-confirm"
+        onclick="confirmNight()" disabled>Təsdiqlə</button>
+    </div>
+
+    <div class="card" id="night-wait-card">
+      <p style="text-align:center;color:var(--muted)">Digər oyunçuları gözləyin...</p>
+    </div>
+
+    <div id="detective-result" class="det-result" style="display:none"></div>
+    <div id="thief-result" class="thief-result" style="display:none"></div>
+    <div id="ability-result-box" class="ability-result-box" style="display:none"></div>
+  </div>
+
+  <!-- ══ GÜNDÜZ ══ -->
+  <div id="screen-day" class="screen">
+    <div class="phase-header">
+      <div class="phase-icon">☀️</div>
+      <div class="phase-title">Gündüz</div>
+      <div class="phase-desc">Müzakirə edin!</div>
+    </div>
+    <div class="timer-wrap"><div class="timer-bar" id="day-bar" style="width:100%"></div></div>
+    <div class="timer-label" id="day-label"></div>
+    <div id="day-announces"></div>
+
+    <div class="card">
+      <div class="card-title">Birini nominasiya et</div>
+      <div class="player-list" id="day-players"></div>
+      <button class="btn btn-primary" style="margin-top:12px" id="btn-nominate"
+        onclick="nominate()" disabled>Nominasiya et</button>
+    </div>
+  </div>
+
+  <!-- ══ SƏSVERMƏs ══ -->
+  <div id="screen-vote" class="screen">
+    <div class="phase-header">
+      <div class="phase-icon">🗳️</div>
+      <div class="phase-title">Səsvermə</div>
+      <div class="phase-desc">Kimi xaric etmək istəyirsiniz?</div>
+    </div>
+    <div class="timer-wrap"><div class="timer-bar" id="vote-bar" style="width:100%"></div></div>
+    <div class="timer-label" id="vote-label"></div>
+
+    <div class="card">
+      <div class="card-title">Səsinizi verin</div>
+      <div class="player-list" id="vote-players"></div>
+      <button class="btn btn-primary" style="margin-top:12px" id="btn-vote"
+        onclick="castVote()" disabled>Səs ver</button>
+    </div>
+  </div>
+
+  <!-- ══ OYUN SONU ══ -->
+  <div id="screen-ended" class="screen">
+    <div class="card result-banner" id="result-banner"></div>
+    <div class="card">
+      <div class="card-title">Rolların açıqlanması</div>
+      <div class="reveal-list" id="reveal-list"></div>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="goHome()">Ana Səhifəyə Qayıt</button>
+  </div>
+
+</div><!-- /main -->
+
+<!-- Moderator panel (yalnız owner üçün) -->
+<div class="mod-panel" id="mod-panel">
+  <button class="mod-btn mod-next" id="mod-btn-next" onclick="modNext()">⏭ Növbəti Faza</button>
+  <button class="mod-btn mod-elim" id="mod-btn-elim" onclick="modElimMode()" disabled>🔪 Xaric Et</button>
+</div>
+
+<!-- Solo mode player switcher -->
+<div class="solo-panel" id="solo-panel">
+  <div class="solo-panel-title">👤 Admin — Oyunçu seç</div>
+  <div class="solo-players-row" id="solo-players-row"></div>
+</div>
+
+<!-- Solo mode night/vote action overlay -->
+<div id="solo-night-overlay" style="display:none;position:fixed;inset:0;z-index:700;
+  background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px">
+</div>
+
+<div id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── State ────────────────────────────────────────────────────
+const myName   = sessionStorage.getItem('playerName');
+const roomCode = sessionStorage.getItem('roomCode');
+if (!myName || !roomCode) { window.location.href = '/'; }
+
+document.getElementById('header-code').textContent = roomCode;
+
+let myRole       = null;
+let isOwner      = false;
+let mySocketId   = null;
+let currentPhase = 'lobby';
+let currentPlayers = [];
+let nightTarget  = null;
+let dayTarget    = null;
+let voteTarget   = null;
+let hasActed     = false;
+let hasVoted     = false;
+let hasNominated = false;
+let elimMode     = false;
+let timers       = {};
+
+// ── Solo mode ────────────────────────────────────────────────
+const _soloRaw   = sessionStorage.getItem('soloData');
+const soloData   = _soloRaw ? JSON.parse(_soloRaw) : null;
+const isSoloMode = !!(soloData?.soloMode);
+let soloAllRoles = soloData?.allRoles || [];   // [{id,name,role,isBot,isAdmin}]
+
+// Solo panel yalnız solo modda görünür
+if (!isSoloMode) {
+  document.getElementById('solo-panel').style.display = 'none';
+}
+let soloCurrentPlayerId = null;                // which player we're viewing as
+
+function initSoloPanel() {
+  if (!isSoloMode) return;
+  document.getElementById('solo-panel').classList.add('visible');
+  // find admin's own id (isAdmin=true)
+  const adminEntry = soloAllRoles.find(p => p.isAdmin);
+  if (adminEntry) soloCurrentPlayerId = adminEntry.id;
+  renderSoloPanel();
+}
+
+function renderSoloPanel() {
+  if (!isSoloMode) return;
+  const row = document.getElementById('solo-players-row');
+  row.innerHTML = soloAllRoles.map(p => {
+    const ri = ROLE_INFO[p.role] || {};
+    const isCurrent = p.id === soloCurrentPlayerId;
+    const cpData = currentPlayers.find(cp => cp.id === p.id);
+    const isDead = cpData?.alive === false;
+    const deathRound = isDead && cpData?.diedAt ? `💀T${cpData.diedAt}` : (isDead ? '💀' : '');
+    return `<div class="solo-player-chip ${isCurrent?'current':''} ${isDead?'dead':''}"
+      onclick="${isDead?'':`switchSoloPlayer('${p.id}')`}">
+      ${p.name}
+      <span class="chip-role">${ri.icon||''} ${deathRound || (p.isAdmin?'(Sən)':'')}</span>
+    </div>`;
+  }).join('');
+}
+
+function switchSoloPlayer(playerId) {
+  const entry = soloAllRoles.find(p => p.id === playerId);
+  if (!entry) return;
+  soloCurrentPlayerId = playerId;
+  renderSoloPanel();
+
+  // Show their role screen
+  const ri = ROLE_INFO[entry.role] || {};
+  const mafBots = soloAllRoles.filter(p =>
+    ['mafia','cleaner','roleblocker','blame'].includes(p.role) && p.id !== playerId
+  ).map(p => `${p.name} (${ROLE_INFO[p.role]?.icon||''} ${p.role})`);
+
+  showRoleScreen(
+    entry.role,
+    soloAllRoles.find(r => r.key === entry.role)?.name || entry.role,
+    ['mafia','cleaner','roleblocker','blame'].includes(entry.role) ? mafBots : []
+  );
+}
+
+// Rol məlumatları
+const ROLE_INFO = {
+  // ── Yaxşılar ──
+  mafia:        { icon:'🔪', cls:'mafia',       side:'bad',     sideLabel:'😈 Pislər',
+    desc:'Hər gecə komandanızla birlikdə bir vətəndaşı öldürürsünüz. Gündüzlər özünüzü gizlədərək şübhəni başqasına yönəldin.',
+    objective:'Məqsəd: Şəhərdəki xeyirxah oyunçuları məhv edin!' },
+  cleaner:      { icon:'🧹', cls:'mafia',       side:'bad',     sideLabel:'😈 Pislər',
+    desc:'Mafiyanın üzvüsünüz. Gecə öldürülən mafiya üzvünün rolunu gizlədirsiniz — digər oyunçular kimliyi öyrənə bilmir.',
+    objective:'Məqsəd: Mafiyanın sirlərini qoruyun, şəhəri məhv edin!' },
+  blame:        { icon:'🗣️', cls:'mafia',       side:'bad',     sideLabel:'😈 Pislər',
+    desc:'Mafiyanın üzvüsünüz. Gecə öldürülən birinin rolunu "Mafiya" kimi göstərə bilərsiniz — yanlış məlumat yaradırsınız.',
+    objective:'Məqsəd: Şəhəri çaşdırın, mafiyaya qalibiyyət qazandırın!' },
+  roleblocker:  { icon:'🚫', cls:'mafia',       side:'bad',     sideLabel:'😈 Pislər',
+    desc:'Mafiyanın üzvüsünüz. Hər gecə bir oyunçunu bloklayırsınız — o oyunçu o gecə öz xüsusi gücündən istifadə edə bilmir.',
+    objective:'Məqsəd: Xeyirxahların gücünü iflic edin, mafiyaya qalibiyyət qazandırın!' },
+
+  // ── Yaxşılar ──
+  police:       { icon:'🔍', cls:'police',      side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Hər gecə bir oyunçunu yoxlayırsınız. Cavab olaraq onun "Pis" yoxsa "Yaxşı" tərəfdə olduğunu öyrənirsiniz.',
+    objective:'Məqsəd: Mafiya üzvlərini tapın, şəhəri xilas edin!' },
+  lookout:      { icon:'👁️', cls:'lookout',     side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Hər gecə bir oyunçunu izləyirsiniz. O oyunçuya gecə kim gəlib-gedibsə görürsünüz.',
+    objective:'Məqsəd: Gecə hərəkətlərini aşkar edib şəhəri qoruyun!' },
+  trapper:      { icon:'🪤', cls:'trapper',     side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Hər gecə bir yerə tələ qurursunuz. Ora gələn pis niyyətli oyunçu tələyə düşür və onun kimliyi aşkar olunur.',
+    objective:'Məqsəd: Mafiyaçıları tələyə salın, şəhəri qoruyun!' },
+  snitch:       { icon:'🕵️', cls:'snitch',     side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Oyunun əvvəlində bütün mafiya üzvlərinin adlarını görürsünüz — amma bunu ehtiyatla istifadə etməlisiniz.',
+    objective:'Məqsəd: Gizli bildiyiniz məlumatla şəhəri xilas edin!' },
+  provoker:     { icon:'😤', cls:'provoker',    side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Hər gecə bir oyunçunu provokatçıya məruz qoyursunuz. Sabah səsvermədə o oyunçunun əleyhinə 2 əlavə səs hesablanır.',
+    objective:'Məqsəd: Mafiya üzvlərini linç etdirin, şəhəri qoruyun!' },
+  tracker:      { icon:'🛤️', cls:'tracker',    side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Hər gecə bir oyunçunu izləyirsiniz. O oyunçunun gecə kimi hədəf seçdiyini görürsünüz.',
+    objective:'Məqsəd: Hərəkət zəncirini açıqlayın, şəhəri qoruyun!' },
+  doctor:       { icon:'💉', cls:'doctor',      side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Hər gecə bir oyunçunu qoruyursunuz. O gecə həmin oyunçu öldürülməyə cəhd edilsə sağ qalır. Özünüzü də qoruya bilərsiniz.',
+    objective:'Məqsəd: Günahsızları ölümdən xilas edin!' },
+  citizen:      { icon:'👤', cls:'citizen',     side:'good',    sideLabel:'😇 Yaxşılar',
+    desc:'Sıravi bir şəhər sakinisiniz. Xüsusi gücünüz yoxdur — amma müzakirə və səsvermədə mühüm roloynayırsınız.',
+    objective:'Məqsəd: Mafiya üzvlərini müzakirədə tapın, onlara səs verin!' },
+
+  // ── Neytral ──
+  serialkiller: { icon:'🗡️', cls:'serialkiller',side:'neutral', sideLabel:'⚖️ Neytral',
+    desc:'Tək başınıza savaşırsınız. Hər gecə bir oyunçunu öldürürsünüz. Sizi qorumağa çalışan həkim belə sizdən qaça bilməz.',
+    objective:'Məqsəd: Hamını öldürün, tək siz sağ qalın!' },
+  bomber:       { icon:'💣', cls:'bomber',       side:'neutral', sideLabel:'⚖️ Neytral',
+    desc:'Hər gecə bir yerə bomba qoyursunuz. Ora gələn oyunçu partlayışda ölür. Özünüzü qorumaq üçün diqqətli olun.',
+    objective:'Məqsəd: Hamını məhv edib tək qalın!' },
+  thief:        { icon:'🦝', cls:'thief',        side:'neutral', sideLabel:'⚖️ Neytral',
+    desc:'Hər gecə bir oyunçunun rolunu oğurlayırsınız. Oğurladığınız rolun qalibiyyət şərtinə görə qalib gəlirsiniz.',
+    objective:'Məqsəd: Düzgün rolü oğurlayıb o tərəflə qalibiyyət qazanın!' },
+  haunter:      { icon:'👻', cls:'haunter',      side:'neutral', sideLabel:'⚖️ Neytral',
+    desc:'Öldükdən sonra aktiv olursunuz. Ruh olaraq hər gecə bir oyunçunu "keçirirsiniz" — o oyunçunun hərəkətlərini idarə edirsiniz.',
+    objective:'Məqsəd: Ruh kimi oyuna müdaxilə edin və qalib gəlin!' },
+  survivor:     { icon:'🛡️', cls:'survivor',    side:'neutral', sideLabel:'⚖️ Neytral',
+    desc:'Tərəf seçmirsiniz — sadəcə sağ qalmaq istəyirsiniz. Bir dəfə ölümdən qoruna bilərsiniz.',
+    objective:'Məqsəd: Oyunun sonuna qədər sağ qalın!' },
+};
+
+const ROLE_CLASS = { mafia:'rr-mafia',detective:'rr-detective',doctor:'rr-doctor',
+  citizen:'rr-citizen',mayor:'rr-mayor',maniac:'rr-maniac',serialkiller:'rr-serialkiller',thief:'rr-thief' };
+
+// Konfiqurasiya
+const CONFIG_ROLES = [
+  // Pislər
+  { key:'mafia',        name:'🔪 Mafiya Üzvü',  desc:'Hər gecə öldürür',                    min:1, group:'Pislər' },
+  { key:'cleaner',      name:'🧹 Təmizçi',       desc:'Ölən mafiya üzvünü gizlədir',         min:0, group:'Pislər' },
+  { key:'blame',        name:'🗣️ İttihamçı',    desc:'Ölüm rolunu "Mafiya" göstərir',       min:0, group:'Pislər' },
+  { key:'roleblocker',  name:'🚫 Blokçu',        desc:'Bir oyunçunun gücünü bloklayır',      min:0, group:'Pislər' },
+  // Yaxşılar
+  { key:'police',       name:'🔍 Polis',         desc:'Gecə yoxlayır və bloklayır',          min:0, group:'Yaxşılar' },
+  { key:'lookout',      name:'👁️ Gözətçi',      desc:'Kimin yanına kimin getdiyini görür',  min:0, group:'Yaxşılar' },
+  { key:'trapper',      name:'🪤 Tələçi',        desc:'Gecə tələ qurur',                     min:0, group:'Yaxşılar' },
+  { key:'snitch',       name:'🕵️ Xəbərçi',     desc:'Bir oyunçunun rolunu öyrənir',        min:0, group:'Yaxşılar' },
+  { key:'provoker',     name:'😤 Provokatçı',    desc:'Hədəfə +2 səs verdirir',              min:0, group:'Yaxşılar' },
+  { key:'tracker',      name:'🛤️ İzləyici',    desc:'Hədəfin hara getdiyini görür',        min:0, group:'Yaxşılar' },
+  { key:'doctor',       name:'💉 Həkim',         desc:'Gecə qoruyur',                        min:0, group:'Yaxşılar' },
+  { key:'citizen',      name:'👤 Vətəndaş',      desc:'Adi şəhər sakini',                    min:0, group:'Yaxşılar' },
+  // Neytral
+  { key:'serialkiller', name:'🗡️ Serial Killer', desc:'Tək qalsa qalib, güclü qatil',       min:0, group:'Neytral' },
+  { key:'bomber',       name:'💣 Bombacı',       desc:'Bomba qoyur, partladır',              min:0, group:'Neytral' },
+  { key:'thief',        name:'🦝 Oğru',          desc:'Rol oğurlayır',                       min:0, group:'Neytral' },
+  { key:'haunter',      name:'👻 Ruh',           desc:'Öldükdən sonra aktiv olur',           min:0, group:'Neytral' },
+  { key:'survivor',     name:'🛡️ Sağqalan',     desc:'Sağ qalsa qalib',                     min:0, group:'Neytral' },
+];
+let configValues = {
+  mafia:1, cleaner:0, blame:0, roleblocker:0,
+  police:0, lookout:0, trapper:0, snitch:0, provoker:0, tracker:0, doctor:1, citizen:2,
+  serialkiller:0, bomber:0, thief:0, haunter:0, survivor:0,
+};
+
+// ── Socket ───────────────────────────────────────────────────
+const socket = io();
+
+socket.on('connect', () => {
+  mySocketId = socket.id;
+  socket.emit('room:rejoin', { code: roomCode, name: myName }, (res) => {
+    if (!res.ok) { alert(res.error); window.location.href = '/'; return; }
+    isOwner      = res.owner === socket.id;
+    currentPhase = res.phase;
+    currentPlayers = res.players || [];
+    if (res.roleConfig) configValues = { ...configValues, ...res.roleConfig };
+
+    if (res.phase === 'lobby') {
+      updateLobby({ players: res.players, owner: res.owner });
+      showScreen('lobby');
+    } else if (res.myRole) {
+      myRole = res.myRole;
+      resumePhase(res.phase, res.players);
+    }
+
+    // Init solo panel if solo mode
+    if (isSoloMode) {
+      // Update soloAllRoles with current socket id for admin
+      soloAllRoles = soloAllRoles.map(p =>
+        p.isAdmin ? { ...p, id: socket.id } : p
+      );
+      soloCurrentPlayerId = socket.id;
+      initSoloPanel();
+    }
+  });
+});
+
+function resumePhase(phase, players) {
+  currentPlayers = players || currentPlayers;
+  if (phase === 'night')  showNightScreen(currentPlayers, true);
+  else if (phase === 'day')   showDayScreen([], currentPlayers, true);
+  else if (phase === 'vote')  showVoteScreen(currentPlayers, true);
+  else if (phase === 'ended') showScreen('ended');
+}
+
+// ── Room events ──────────────────────────────────────────────
+socket.on('room:update', ({ players, owner }) => {
+  isOwner = owner === socket.id;
+  currentPlayers = players;
+  if (currentPhase === 'lobby') updateLobby({ players, owner });
+  updateModPanel();
+});
+
+socket.on('room:configUpdated', ({ config }) => {
+  configValues = { ...configValues, ...config };
+  if (isOwner) renderConfigGrid();
+  toast('Rol konfiqurasiyası yeniləndi');
+});
+
+socket.on('player:disconnected', ({ name }) => toast(`⚡ ${name} bağlantısı kəsildi`));
+socket.on('player:left',         ({ name }) => toast(`${name} otaqdan çıxdı`));
+
+// ── Game events ──────────────────────────────────────────────
+socket.on('game:started', ({ playerCount }) => {
+  toast(`Oyun başladı! ${playerCount} oyunçu`);
+  if (isSoloMode) {
+    // Start cycling through all player roles
+    setTimeout(() => soloShowAllRoles(0), 300);
+  }
+});
+
+socket.on('game:role', ({ role, roleName, mafiaTeam }) => {
+  myRole = role;
+  if (isSoloMode) return;  // Solo modda soloShowAllRoles overlay-i işlədir
+  showRoleScreen(role, roleName, mafiaTeam);
+});
+
+socket.on('phase:night', ({ players, roundNum }) => {
+  currentPhase   = 'night';
+  currentPlayers = players;
+  if (isSoloMode) {
+    renderSoloPanel();
+    // Rol ekranı hələ açıqdırsa, gecəni pending saxla
+    if (document.getElementById('solo-night-overlay').style.display === 'flex'
+        && window._soloRolesShowing) {
+      window._pendingNightPlayers = { players, roundNum };
+      return;
+    }
+  }
+  showNightScreen(players, false, roundNum);
+  if (isSoloMode) soloStartNight(players);
+});
+
+socket.on('phase:day', ({ killed, players, roundNum }) => {
+  currentPhase   = 'day';
+  currentPlayers = players;
+  if (isSoloMode) renderSoloPanel();
+  showDayScreen(killed, players, false, roundNum);
+  if (isSoloMode) soloStartNominate(players);
+});
+
+socket.on('phase:vote', ({ players }) => {
+  currentPhase   = 'vote';
+  currentPlayers = players;
+  if (isSoloMode) renderSoloPanel();
+  showVoteScreen(players);
+  if (isSoloMode) soloStartVote(players);
+});
+
+socket.on('vote:update', ({ nominations }) => updateVoteBadges(nominations));
+
+socket.on('vote:result', ({ eliminatedName, eliminatedRoleName, tie }) => {
+  if (tie) toast('🤝 Bərabər səs — heç kim xaric edilmədi');
+  else if (eliminatedName) toast(`⚖️ ${eliminatedName} (${eliminatedRoleName || '?'}) xaric edildi`);
+  else toast('Heç kim xaric edilmədi');
+});
+
+socket.on('day:nominated', ({ nominator, targetName }) => {
+  const c = document.getElementById('day-announces');
+  c.innerHTML += `<div class="announce ann-nominate">⚠️ ${nominator}, ${targetName}-i nominasiya etdi</div>`;
+});
+
+socket.on('detective:result', ({ targetName, isMafia }) => {
+  const el = document.getElementById('detective-result');
+  el.style.display = 'block';
+  el.className = isMafia ? 'det-result det-mafia' : 'det-result det-innocent';
+  el.textContent = isMafia ? `🔴 ${targetName} — Mafiya üzvüdür!` : `🟢 ${targetName} — Masumdur`;
+});
+
+socket.on('thief:result', ({ targetName, stolenRoleName }) => {
+  const el = document.getElementById('thief-result');
+  el.style.display = 'block';
+  el.textContent = `🦝 ${targetName}-dən "${stolenRoleName}" rolunu oğurladın!`;
+});
+
+socket.on('thief:stolen', ({ message }) => {
+  myRole = 'citizen';
+  toast('🦝 ' + message);
+});
+
+// Universal ability result handler for all roles
+socket.on('ability:result', ({ type, message, targetName, role, roleName }) => {
+  const box = document.getElementById('ability-result-box');
+  if (!box) return;
+
+  const typeMap = {
+    lookout:      { cls:'ab-lookout',   icon:'👁️'  },
+    tracker:      { cls:'ab-tracker',   icon:'🛤️'  },
+    trapper:      { cls:'ab-trapper',   icon:'🪤'   },
+    trap_caught:  { cls:'ab-trap-caught',icon:'🪤'  },
+    snitch:       { cls:'ab-snitch',    icon:'🕵️'  },
+    snitch_used:  { cls:'ab-info',      icon:'⚠️'   },
+    provoker:     { cls:'ab-provoker',  icon:'😤'   },
+    survivor:     { cls:'ab-survivor',  icon:'🛡️'  },
+    haunter:      { cls:'ab-haunter',   icon:'👻'   },
+    roleblocker:  { cls:'ab-roleblocker',icon:'🚫'  },
+    police:       { cls:'ab-police',    icon:'🔍'   },
+    bomber_placed:{ cls:'ab-bomber',    icon:'💣'   },
+    thief:        { cls:'ab-info',      icon:'🦝'   },
+  };
+
+  const t = typeMap[type] || { cls:'ab-info', icon:'ℹ️' };
+  box.className = `ability-result-box ${t.cls}`;
+  box.style.display = 'block';
+
+  // Snitch gets extra role info
+  if (type === 'snitch' && roleName) {
+    box.textContent = `${t.icon} ${message}`;
+    // Show role with color hint
+    const roleInfo = ROLE_INFO[role];
+    if (roleInfo) {
+      box.textContent = `${t.icon} ${targetName}-in rolu: ${roleInfo.icon} ${roleName}`;
+    }
+  } else {
+    box.textContent = `${t.icon} ${message}`;
+  }
+});
+
+socket.on('mod:eliminated', ({ name }) => toast(`🔪 Moderator ${name}-i xaric etdi`));
+
+socket.on('game:ended', ({ winner, rolesReveal }) => {
+  currentPhase = 'ended';
+  showEndScreen(winner, rolesReveal);
+});
+
+
+// ── Screens ──────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  updateModPanel();
+}
+
+// ── LOBİ ─────────────────────────────────────────────────────
+function updateLobby({ players, owner }) {
+  const list = document.getElementById('lobby-players');
+  list.innerHTML = players.map(p => {
+    const badges = [];
+    if (p.id === owner)    badges.push('<span class="badge b-owner">Sahib</span>');
+    if (p.id === socket.id) badges.push('<span class="badge b-you">Sən</span>');
+    if (!p.connected)      badges.push('<span class="badge b-offline">Offline</span>');
+    return `<div class="player-item ${!p.connected?'offline':''}">
+      <div class="avatar">${p.name[0].toUpperCase()}</div>
+      <div class="pname">${p.name}</div>
+      <div class="badges">${badges.join('')}</div>
+    </div>`;
+  }).join('');
+
+  const ownerStart = document.getElementById('owner-start');
+  const guestWait  = document.getElementById('guest-wait');
+  const configCard = document.getElementById('config-card');
+  const btnStart   = document.getElementById('btn-start');
+  const hint       = document.getElementById('start-hint');
+
+  if (isOwner) {
+    ownerStart.style.display = 'block';
+    guestWait.style.display  = 'none';
+    configCard.style.display = 'block';
+    renderConfigGrid();
+    const total = Object.values(configValues).reduce((s,v)=>s+(parseInt(v)||0),0);
+    const ok    = total === players.length && players.length >= 4;
+    btnStart.disabled = !ok;
+    hint.textContent  = players.length < 4
+      ? `Minimum 4 oyunçu lazımdır (${players.length}/4)`
+      : ok ? `${players.length} oyunçu hazırdır` : `Rol sayı (${total}) oyunçu sayına (${players.length}) bərabər olmalıdır`;
+  } else {
+    ownerStart.style.display = 'none';
+    guestWait.style.display  = 'block';
+    configCard.style.display = 'none';
+  }
+}
+
+function renderConfigGrid() {
+  const playerCount = currentPlayers.length;
+  const grid = document.getElementById('config-grid');
+  let html = '';
+  let lastGroup = null;
+  const groupColor = { 'Pislər':'var(--accent)', 'Yaxşılar':'var(--green)', 'Neytral':'var(--purple)' };
+  CONFIG_ROLES.forEach(r => {
+    if (r.group !== lastGroup) {
+      lastGroup = r.group;
+      html += `<div style="grid-column:1/-1;font-size:.7rem;text-transform:uppercase;
+        letter-spacing:.1em;color:${groupColor[r.group]||'var(--muted)'};
+        padding:6px 2px 2px;border-top:1px solid var(--border);margin-top:4px">
+        ${r.group}</div>`;
+    }
+    html += `<div class="config-item">
+      <div class="config-role-name">${r.name}</div>
+      <div class="config-role-desc">${r.desc}</div>
+      <div class="config-input-row">
+        <button class="config-btn" onclick="changeConfig('${r.key}',-1)">−</button>
+        <div class="config-count" id="cfg-${r.key}">${configValues[r.key]||0}</div>
+        <button class="config-btn" onclick="changeConfig('${r.key}',1)">+</button>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  updateConfigTotal(playerCount);
+}
+
+function changeConfig(key, delta) {
+  const min = CONFIG_ROLES.find(r=>r.key===key)?.min || 0;
+  configValues[key] = Math.max(min, (configValues[key]||0) + delta);
+  const el = document.getElementById('cfg-' + key);
+  if (el) el.textContent = configValues[key];
+  updateConfigTotal(currentPlayers.length);
+  updateStartBtn();
+}
+
+function updateConfigTotal(playerCount) {
+  const total = Object.values(configValues).reduce((s,v)=>s+(parseInt(v)||0),0);
+  const el    = document.getElementById('config-total');
+  const ok    = total === playerCount;
+  el.textContent = `Cəmi: ${total} / ${playerCount} oyunçu`;
+  el.className   = 'config-total ' + (ok ? 'ok' : 'bad');
+}
+
+function updateStartBtn() {
+  const total = Object.values(configValues).reduce((s,v)=>s+(parseInt(v)||0),0);
+  const pc    = currentPlayers.length;
+  const ok    = total === pc && pc >= 4;
+  const btn   = document.getElementById('btn-start');
+  const hint  = document.getElementById('start-hint');
+  if (btn) btn.disabled = !ok;
+  if (hint) hint.textContent = ok ? `${pc} oyunçu hazırdır`
+    : pc < 4 ? `Minimum 4 oyunçu lazımdır (${pc}/4)`
+    : `Rol sayı (${total}) oyunçu sayına (${pc}) bərabər olmalıdır`;
+}
+
+function saveConfig() {
+  const playerCount = currentPlayers.length;
+  const v = validateConfigClient(configValues, playerCount);
+  if (!v.ok) { toast('❌ ' + v.error); return; }
+  socket.emit('room:setConfig', { config: configValues }, (res) => {
+    if (!res?.ok) toast('❌ ' + (res?.error||'Xəta'));
+    else toast('✅ Konfiqurasiya saxlandı');
+  });
+}
+
+function validateConfigClient(cfg, count) {
+  const total = Object.values(cfg).reduce((s,v)=>s+(parseInt(v)||0),0);
+  if (total !== count) return { ok:false, error:`Rol sayı (${total}) oyunçu sayına (${count}) bərabər olmalıdır` };
+  if ((cfg.mafia||0) < 1) return { ok:false, error:'Minimum 1 Mafia olmalıdır' };
+  return { ok:true };
+}
+
+// ── ROL ekranı ───────────────────────────────────────────────
+function showRoleScreen(role, roleName, mafiaTeam) {
+  const info = ROLE_INFO[role] || { icon:'🃏', cls:'citizen', side:'good', sideLabel:'😇 Yaxşılar', desc:'', objective:'' };
+  document.getElementById('role-icon').textContent  = info.icon;
+  document.getElementById('role-name').textContent  = roleName;
+  document.getElementById('role-name').className    = 'role-name ' + info.cls;
+  document.getElementById('role-desc').textContent  = info.desc;
+
+  // Side badge
+  const badge = document.getElementById('role-side-badge');
+  badge.textContent = info.sideLabel || '';
+  badge.className = 'role-side-badge';
+  if (info.side === 'good')    badge.classList.add('side-good');
+  else if (info.side === 'bad') badge.classList.add('side-bad');
+  else                          badge.classList.add('side-neutral');
+
+  // Objective
+  const obj = document.getElementById('role-objective');
+  obj.textContent = info.objective || '';
+  obj.className = 'role-objective';
+  if (info.side === 'good')    obj.classList.add('obj-good');
+  else if (info.side === 'bad') obj.classList.add('obj-bad');
+  else                          obj.classList.add('obj-neutral');
+
+  const mt = document.getElementById('mafia-team-box');
+  if ((role === 'mafia' || role === 'cleaner' || role === 'blame' || role === 'roleblocker') && mafiaTeam?.length > 0) {
+    mt.style.display = 'block';
+    mt.textContent   = '🤝 Komanda yoldaşlarınız: ' + mafiaTeam.join(', ');
+  } else { mt.style.display = 'none'; }
+
+  // Header persistent role badge
+  const hbadge = document.getElementById('header-role-badge');
+  if (hbadge) {
+    hbadge.style.display = '';
+    hbadge.textContent   = `${info.icon} ${roleName}`;
+    hbadge.className     = 'header-role-badge';
+    if (info.side === 'good')    hbadge.classList.add('hrb-good');
+    else if (info.side === 'bad') hbadge.classList.add('hrb-bad');
+    else                          hbadge.classList.add('hrb-neutral');
+  }
+
+  showScreen('role');
+}
+
+function ackRole() {
+  if (isSoloMode) {
+    // Solo modda rol ekranı göstərilmir, bu düymə işləmir
+    return;
+  }
+  showScreen('night');
+}
+
+// ── GECƏ ekranı ──────────────────────────────────────────────
+function showNightScreen(players, resume, roundNum) {
+  nightTarget = null; hasActed = false;
+  document.getElementById('detective-result').style.display    = 'none';
+  document.getElementById('thief-result').style.display        = 'none';
+  document.getElementById('ability-result-box').style.display  = 'none';
+
+  const actionRoles = ['mafia','cleaner','blame','roleblocker',
+    'police','lookout','trapper','snitch','provoker','tracker',
+    'doctor','serialkiller','bomber','thief'];
+
+  const myPlayer = players.find(p => p.id === socket.id);
+  const iAmAlive = myPlayer?.alive !== false;
+  const canAct   = actionRoles.includes(myRole) && iAmAlive;
+
+  const nightDesc = {
+    mafia:       'Hədəfinizi seçin — bu gecə kimi öldürürsünüz?',
+    cleaner:     'Hədəfinizi seçin — mafiya kimi öldürürsünüz?',
+    blame:       'Hədəfinizi seçin — mafiya kimi öldürürsünüz?',
+    roleblocker: 'Bu gecə kimi bloklayırsınız?',
+    police:      'Bu gecə kimi bloklayıb araşdıracaqsınız?',
+    lookout:     'Bu gecə kimin yanını izləyirsiniz?',
+    trapper:     'Bu gecə kimin üçün tələ qurursunuz?',
+    snitch:      'Bu gecə kimin rolunu öyrənmək istəyirsiniz?',
+    provoker:    'Bu gecə kimi provokatçıya məruz qoyursunuz?',
+    tracker:     'Bu gecə kimi izləyirsiniz?',
+    doctor:      'Bu gecə kimi qoruyursunuz?',
+    serialkiller:'Növbəti qurbanınız kim?',
+    bomber:      'Bu gecə harada bomba qoyursunuz?',
+    thief:       'Bu gecə kimin rolunu oğurlayırsınız?',
+  };
+  document.getElementById('night-desc').textContent = iAmAlive
+    ? (nightDesc[myRole] || 'Gecəni seyr edin') : 'Siz ölmüsünüz. Gecəni seyr edin.';
+
+  const ac = document.getElementById('night-action-card');
+  const wc = document.getElementById('night-wait-card');
+
+  if (canAct && !resume) {
+    ac.style.display = 'block'; wc.style.display = 'none';
+    const titles = {
+      mafia:       '🔪 Hədəfini seç',
+      cleaner:     '🧹 Hədəfini seç',
+      blame:       '🗣️ Hədəfini seç',
+      roleblocker: '🚫 Kimi blokla',
+      police:      '🔍 Kimi yoxla',
+      lookout:     '👁️ Kimi izlə',
+      trapper:     '🪤 Tələ qur',
+      snitch:      '🕵️ Kimin rolunu öyrən',
+      provoker:    '😤 Kimi provokasiya et',
+      tracker:     '🛤️ Kimi izlə',
+      doctor:      '💉 Kimi qoru',
+      serialkiller:'🗡️ Qurbanını seç',
+      bomber:      '💣 Bomba qoy',
+      thief:       '🦝 Kimin rolunu oğurla',
+    };
+    document.getElementById('night-action-title').textContent = titles[myRole] || 'Hədəfini seç';
+
+    const targets = players.filter(p => p.alive && p.id !== socket.id);
+    document.getElementById('night-players').innerHTML = targets.map(p =>
+      `<div class="player-item clickable" data-id="${p.id}" onclick="selectNightTarget(this,'${p.id}')">
+        <div class="avatar">${p.name[0].toUpperCase()}</div>
+        <div class="pname">${p.name}</div>
+      </div>`).join('');
+    document.getElementById('btn-night-confirm').disabled = true;
+    document.getElementById('btn-night-confirm').textContent = 'Təsdiqlə';
+  } else {
+    ac.style.display = 'none'; wc.style.display = 'block';
+  }
+
+  if (!resume) startTimer('night', 40);
+  showScreen('night');
+}
+
+function selectNightTarget(el, id) {
+  document.querySelectorAll('#night-players .player-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  nightTarget = id;
+  document.getElementById('btn-night-confirm').disabled = false;
+}
+
+function confirmNight() {
+  if (!nightTarget || hasActed) return;
+  hasActed = true;
+  socket.emit('night:action', { targetId: nightTarget });
+  document.getElementById('btn-night-confirm').disabled  = true;
+  document.getElementById('btn-night-confirm').textContent = '✓ Göndərildi';
+  toast('Seçiminiz qeyd edildi');
+}
+
+// ── GÜNDÜZ ekranı ────────────────────────────────────────────
+function showDayScreen(killed, players, resume, roundNum) {
+  hasNominated = false; dayTarget = null;
+  stopAllTimers();
+
+  const ann = document.getElementById('day-announces');
+  ann.innerHTML = '';
+
+  if (killed && killed.length > 0) {
+    killed.forEach(k => {
+      if (k.saved) {
+        ann.innerHTML += `<div class="announce ann-safe">🛡️ ${k.name} qorundu — sağ qaldı!</div>`;
+      } else {
+        ann.innerHTML += `<div class="announce ann-death">💀 ${k.name} bu gecə öldürüldü!</div>`;
+      }
+    });
+  } else {
+    ann.innerHTML = `<div class="announce ann-safe">🛡️ Bu gecə heç kim öldürülmədi!</div>`;
+  }
+
+  const myPlayer = players.find(p => p.id === socket.id);
+  const iAmAlive = myPlayer?.alive !== false;
+
+  document.getElementById('day-players').innerHTML = players.map(p => {
+    const dead = !p.alive;
+    const isMe = p.id === socket.id;
+    const clickable = iAmAlive && !dead && !isMe;
+    return `<div class="player-item ${dead?'dead':''} ${clickable?'clickable':''}"
+      data-id="${p.id}" ${clickable?`onclick="selectDayTarget(this,'${p.id}')"`:''}>
+      <div class="avatar ${dead?'dead-av':''}">${p.name[0].toUpperCase()}</div>
+      <div class="pname">${p.name}${isMe?' (sən)':''}</div>
+      ${dead ? '<span class="badge b-dead">Ölü</span>' : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('btn-nominate').disabled = true;
+  if (!resume) startTimer('day', 60);
+  showScreen('day');
+}
+
+function selectDayTarget(el, id) {
+  document.querySelectorAll('#day-players .player-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  dayTarget = id;
+  document.getElementById('btn-nominate').disabled = false;
+}
+
+function nominate() {
+  if (!dayTarget || hasNominated) return;
+  hasNominated = true;
+  socket.emit('day:nominate', { targetId: dayTarget });
+  document.getElementById('btn-nominate').disabled = true;
+  toast('Nominasiya göndərildi');
+}
+
+// ── SƏSVERMƏs ekranı ─────────────────────────────────────────
+function showVoteScreen(players, resume) {
+  hasVoted = false; voteTarget = null;
+  stopAllTimers();
+
+  const myPlayer = players.find(p => p.id === socket.id);
+  const iAmAlive = myPlayer?.alive !== false;
+
+  document.getElementById('vote-players').innerHTML = players.filter(p=>p.alive).map(p => {
+    const isMe = p.id === socket.id;
+    const clickable = iAmAlive && !isMe;
+    return `<div class="player-item ${clickable?'clickable':''}" id="vi-${p.id}"
+      data-id="${p.id}" ${clickable?`onclick="selectVoteTarget(this,'${p.id}')"`:''}>
+      <div class="avatar">${p.name[0].toUpperCase()}</div>
+      <div class="pname">${p.name}${isMe?' (sən)':''}</div>
+      <div class="badges"><span class="badge b-votes" id="vbadge-${p.id}">0</span></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('btn-vote').disabled  = true;
+  document.getElementById('btn-vote').textContent = 'Səs ver';
+  if (!resume) startTimer('vote', 30);
+  showScreen('vote');
+}
+
+function selectVoteTarget(el, id) {
+  document.querySelectorAll('#vote-players .player-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  voteTarget = id;
+  document.getElementById('btn-vote').disabled = false;
+}
+
+function castVote() {
+  if (!voteTarget || hasVoted) return;
+  hasVoted = true;
+  socket.emit('vote:cast', { targetId: voteTarget });
+  document.getElementById('btn-vote').disabled  = true;
+  document.getElementById('btn-vote').textContent = '✓ Səs verildi';
+  toast('Səsiniz qeyd edildi');
+}
+
+function updateVoteBadges(nominations) {
+  Object.entries(nominations).forEach(([tid, count]) => {
+    const el = document.getElementById('vbadge-' + tid);
+    if (el) el.textContent = count;
+  });
+}
+
+// ── OYUN SONU ────────────────────────────────────────────────
+function showEndScreen(winner, rolesReveal) {
+  stopAllTimers();
+  const winnerMeta = {
+    town:   { icon:'🏆', cls:'result-town',     text:'Şəhər Qurtarıldı!',        desc:'Bütün təhdidlər aradan qaldırıldı.' },
+    mafia:  { icon:'🔪', cls:'result-mafia',    text:'Mafiya Qalib Gəldi!',      desc:'Şəhər Mafiyanın əlinə keçdi.' },
+    maniac: { icon:'🤡', cls:'result-maniac',   text:'Manyak Qalib Gəldi!',      desc:'Tək qaldı — heç kim ona çatmadı.' },
+    sk:     { icon:'🗡️', cls:'result-sk',       text:'Serial Killer Qalib Gəldi!',desc:'Hamısını tək məhv etdi.' },
+  };
+  const m = winnerMeta[winner] || winnerMeta.town;
+
+  document.getElementById('result-banner').innerHTML = `
+    <div class="result-icon">${m.icon}</div>
+    <div class="result-title ${m.cls}">${m.text}</div>
+    <div class="result-desc">${m.desc}</div>`;
+
+  document.getElementById('reveal-list').innerHTML = rolesReveal.map(p => {
+    const rc = ROLE_CLASS[p.role] || 'rr-citizen';
+    const stolenInfo = p.stolenRole ? ` <span class="reveal-role ${ROLE_CLASS[p.stolenRole]||'rr-citizen'}" style="opacity:.7">← ${p.stolenRoleName}</span>` : '';
+    const deathInfo = (!p.alive && p.diedAt) ? `<span class="badge b-dead" style="font-size:.7rem">💀 Tur ${p.diedAt}</span>` : '';
+    return `<div class="reveal-item">
+      <div class="avatar ${!p.alive?'dead-av':''}">${p.name[0].toUpperCase()}</div>
+      <div class="pname" style="${!p.alive?'opacity:.5':''}">${p.name}</div>
+      <div class="badges">
+        <span class="reveal-role ${rc}">${p.roleName}</span>${stolenInfo}
+        ${!p.alive?'<span class="badge b-dead">Ölü</span>':''}
+        ${deathInfo}
+      </div>
+    </div>`;
+  }).join('');
+
+  const mp = document.getElementById('mod-panel');
+  mp.classList.remove('visible');
+  showScreen('ended');
+}
+
+// ── Moderator panel ──────────────────────────────────────────
+function updateModPanel() {
+  const mp      = document.getElementById('mod-panel');
+  const btnNext = document.getElementById('mod-btn-next');
+  const btnElim = document.getElementById('mod-btn-elim');
+  const inGame  = ['night','day','vote'].includes(currentPhase);
+
+  if (isOwner && inGame) {
+    mp.classList.add('visible');
+    btnNext.disabled = false;
+    btnElim.disabled = currentPlayers.filter(p=>p.alive && p.id !== socket.id).length === 0;
+  } else {
+    mp.classList.remove('visible');
+    elimMode = false;
+  }
+}
+
+function modNext() {
+  socket.emit('mod:nextPhase');
+  toast('⏭ Növbəti fazaya keçildi');
+}
+
+function modElimMode() {
+  elimMode = !elimMode;
+  const btn = document.getElementById('mod-btn-elim');
+  btn.textContent = elimMode ? '❌ Ləğv et' : '🔪 Xaric Et';
+  if (elimMode) toast('Xaric etmək üçün oyunçuya toxunun');
+  highlightElimTargets();
+}
+
+function highlightElimTargets() {
+  // Aktiv ekrandakı bütün canlı oyunçu elementlərini klikləyə bilən et
+  document.querySelectorAll('.player-item:not(.dead)').forEach(el => {
+    const id = el.dataset.id;
+    if (!id || id === socket.id) return;
+    if (elimMode) {
+      el.classList.add('clickable');
+      el.addEventListener('click', modElimClick);
+    } else {
+      el.removeEventListener('click', modElimClick);
+    }
+  });
+}
+
+function modElimClick(e) {
+  if (!elimMode) return;
+  const id = e.currentTarget.dataset.id;
+  if (!id) return;
+  const p = currentPlayers.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`${p.name}-i xaric etmək istəyirsiniz?`)) return;
+  socket.emit('mod:eliminate', { targetId: id });
+  elimMode = false;
+  document.getElementById('mod-btn-elim').textContent = '🔪 Xaric Et';
+}
+
+// ── Game start ───────────────────────────────────────────────
+function startGame() {
+  const v = validateConfigClient(configValues, currentPlayers.length);
+  if (!v.ok) { toast('❌ ' + v.error); return; }
+  socket.emit('game:start', {}, (res) => {
+    if (!res?.ok) toast('❌ ' + (res?.error || 'Xəta'));
+  });
+}
+
+// ── Solo Mode — Tam əl idarəsi ────────────────────────────────
+
+// Bütün oyunçuların rollarını sıra ilə göstər
+function soloShowAllRoles(idx) {
+  if (!isSoloMode || idx >= soloAllRoles.length) {
+    // Hamısı görüldü — overlay-i bağla, gecə gözlə
+    window._soloRolesShowing = false;
+    document.getElementById('solo-night-overlay').style.display = 'none';
+    soloCurrentPlayerId = soloAllRoles[0]?.id || null;
+    renderSoloPanel();
+    // Pending gecə varsa indi başlat
+    if (window._pendingNightPlayers) {
+      const { players, roundNum } = window._pendingNightPlayers;
+      window._pendingNightPlayers = null;
+      showNightScreen(players, false, roundNum);
+      soloStartNight(players);
+    }
+    return;
+  }
+  const entry = soloAllRoles[idx];
+  const info = ROLE_INFO[entry.role] || {};
+  const roleName = ADMIN_ALL_ROLES.find(r => r.key === entry.role)?.name || entry.role;
+  const isMaf = ['mafia','cleaner','roleblocker','blame'].includes(entry.role);
+  const mafTeam = isMaf ? soloAllRoles.filter(p =>
+    ['mafia','cleaner','roleblocker','blame'].includes(p.role) && p.id !== entry.id
+  ).map(p => `${ROLE_INFO[p.role]?.icon||''} ${p.name}`).join(', ') : '';
+
+  soloCurrentPlayerId = entry.id;
+  renderSoloPanel();
+
+  window._soloRolesShowing = true;
+  const overlay = document.getElementById('solo-night-overlay');
+  overlay.innerHTML = `
+    <div class="solo-night-box" style="max-width:320px;text-align:center">
+      <div style="font-size:2.6rem;margin-bottom:8px">${info.icon||'🃏'}</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">${entry.name}</div>
+      <div class="role-name ${entry.role}" style="font-size:1.3rem;margin-bottom:8px">${roleName}</div>
+      ${info.desc ? `<div style="color:var(--muted);font-size:.85rem;margin-bottom:10px">${info.desc}</div>` : ''}
+      ${mafTeam ? `<div style="background:#2a0f0f;border:1px solid var(--accent);border-radius:8px;padding:8px;font-size:.8rem;margin-bottom:10px">🔪 Komanda: ${mafTeam}</div>` : ''}
+      <button class="btn btn-confirm" onclick="soloShowAllRoles(${idx+1})">
+        Anladım →  <span style="opacity:.6;font-size:.8rem">(${idx+1}/${soloAllRoles.length})</span>
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+}
+
+// Gecə fazası — admin aktiv oyunçuları sıra ilə keçirir, hər biri üçün aksiya seçir
+let _soloNightQueue   = [];   // aktiv oyunçuların id-ləri
+let _soloNightIdx     = 0;
+let _soloNightPlayers = [];
+
+function soloStartNight(players) {
+  if (!isSoloMode) return;
+  const actionRoles = ['mafia','cleaner','blame','roleblocker',
+    'police','lookout','trapper','snitch','provoker','tracker',
+    'doctor','serialkiller','bomber','thief'];
+
+  _soloNightPlayers = players;
+  // Sıralama: əvvəlcə admin özü (real socket), sonra digər "virtual" oyunçular
+  _soloNightQueue = soloAllRoles.filter(p =>
+    players.find(cp => cp.id === p.id && cp.alive) &&
+    actionRoles.includes(p.role)
+  );
+  _soloNightIdx = 0;
+  soloNightNext();
+}
+
+function soloNightNext() {
+  if (_soloNightIdx >= _soloNightQueue.length) {
+    // Hamısı bitdi — server özü resolve edəcək (timer və ya checkNightComplete)
+    toast('✅ Bütün gecə aksiyaları göndərildi');
+    // Passiv oyunçular üçün skip göndər
+    soloAllRoles.forEach(p => {
+      const isAlive = _soloNightPlayers.find(cp => cp.id === p.id && cp.alive);
+      if (!isAlive) return;
+      const inQueue = _soloNightQueue.find(q => q.id === p.id);
+      if (!inQueue) {
+        // Passiv oyunçu — skip
+        socket.emit('admin:bot_action', { botId: p.id, action:'skip_night', targetId: null });
+      }
+    });
+    return;
+  }
+
+  const cur = _soloNightQueue[_soloNightIdx];
+  soloCurrentPlayerId = cur.id;
+  renderSoloPanel();
+
+  // Əgər real admin socket-dirsə — normal night screen göstər
+  if (cur.id === soloAllRoles.find(p=>p.isAdmin)?.id) {
+    // Admin özü oynayır — standart gecə ekranı artıq aktiv
+    showSoloNightPrompt(cur, _soloNightPlayers, false);
+  } else {
+    // Virtual oyunçu — admin onun adından oynayır
+    showSoloNightPrompt(cur, _soloNightPlayers, true);
+  }
+}
+
+function showSoloNightPrompt(player, players, isVirtual) {
+  const info = ROLE_INFO[player.role] || {};
+  const rName = ADMIN_ALL_ROLES.find(r=>r.key===player.role)?.name || player.role;
+  const targets = players.filter(p => p.alive && p.id !== player.id);
+
+  // Solo gecə prompt overlay
+  const overlay = document.getElementById('solo-night-overlay');
+  if (!overlay) return;
+
+  overlay.innerHTML = `
+    <div class="solo-night-box">
+      <div class="solo-night-who">
+        ${info.icon||'👤'} <b>${player.name}</b> — ${rName}
+        ${isVirtual ? '<span class="solo-virt-badge">Virtual oyunçu</span>' : '<span class="solo-admin-badge">Sən</span>'}
+      </div>
+      <div class="solo-night-desc">${nightDescForRole(player.role)}</div>
+      <div class="solo-night-targets">
+        ${targets.map(t => `
+          <div class="solo-target-item" onclick="soloNightSelectTarget('${player.id}','${t.id}',this)">
+            <div class="avatar">${t.name[0].toUpperCase()}</div>
+            <div class="pname">${t.name}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-confirm" style="margin-top:12px" id="solo-night-confirm" onclick="soloNightConfirm('${player.id}')" disabled>
+        Təsdiqlə →
+      </button>
+      <button class="btn" style="margin-top:8px;background:var(--surface2);color:var(--muted)" onclick="soloNightSkip('${player.id}')">
+        Keç (aksiya etmə)
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+  window._soloNightSelectedTarget = null;
+}
+
+function nightDescForRole(role) {
+  const m = {
+    mafia:'Bu gecə kimi öldürürsünüz?', cleaner:'Bu gecə kimi öldürürsünüz?',
+    blame:'Bu gecə kimi öldürürsünüz?', roleblocker:'Kimi bloklayırsınız?',
+    police:'Kimi yoxlayıb bloklayırsınız?', lookout:'Kimin yanını izləyirsiniz?',
+    trapper:'Kimin üçün tələ qurursunuz?', snitch:'Kimin rolunu öyrənirsiniz?',
+    provoker:'Kimi provokasiya edirsiniz?', tracker:'Kimi izləyirsiniz?',
+    doctor:'Kimi qoruyursunuz?', serialkiller:'Bu gecə kimi öldürürsünüz?',
+    bomber:'Bomba harada qoyursunuz?', thief:'Kimin rolunu oğurlayırsınız?',
+  };
+  return m[role] || 'Hədəfini seç';
+}
+
+function soloNightSelectTarget(playerId, targetId, el) {
+  document.querySelectorAll('.solo-target-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  window._soloNightSelectedTarget = targetId;
+  document.getElementById('solo-night-confirm').disabled = false;
+}
+
+function soloNightConfirm(playerId) {
+  const targetId = window._soloNightSelectedTarget;
+  if (!targetId) return;
+  document.getElementById('solo-night-overlay').style.display = 'none';
+
+  const adminId = soloAllRoles.find(p=>p.isAdmin)?.id;
+  if (playerId === adminId) {
+    // Admin özü — real socket emit
+    socket.emit('night:action', { targetId });
+  } else {
+    // Virtual oyunçu — bot_action
+    socket.emit('admin:bot_action', { botId: playerId, action:'night_action', targetId });
+  }
+  _soloNightIdx++;
+  soloNightNext();
+}
+
+function soloNightSkip(playerId) {
+  document.getElementById('solo-night-overlay').style.display = 'none';
+  const adminId = soloAllRoles.find(p=>p.isAdmin)?.id;
+  if (playerId !== adminId) {
+    socket.emit('admin:bot_action', { botId: playerId, action:'skip_night', targetId: null });
+  }
+  _soloNightIdx++;
+  soloNightNext();
+}
+
+// Gündüz fazası — admin hər oyunçu adından nominasiya edir
+let _soloNominateQueue   = [];
+let _soloNominateIdx     = 0;
+let _soloNominatePlayers = [];
+
+function soloStartNominate(players) {
+  if (!isSoloMode) return;
+  _soloNominatePlayers = players;
+  _soloNominateQueue   = soloAllRoles.filter(p =>
+    players.find(cp => cp.id === p.id && cp.alive)
+  );
+  _soloNominateIdx = 0;
+  soloNominateNext();
+}
+
+function soloNominateNext() {
+  if (_soloNominateIdx >= _soloNominateQueue.length) {
+    toast('✅ Bütün nominasiyalar tamamlandı');
+    document.getElementById('solo-night-overlay').style.display = 'none';
+    return;
+  }
+  const cur = _soloNominateQueue[_soloNominateIdx];
+  soloCurrentPlayerId = cur.id;
+  renderSoloPanel();
+
+  const overlay = document.getElementById('solo-night-overlay');
+  const targets = _soloNominatePlayers.filter(p => p.alive && p.id !== cur.id);
+  const info = ROLE_INFO[cur.role] || {};
+  const rName = ADMIN_ALL_ROLES.find(r => r.key === cur.role)?.name || cur.role;
+
+  overlay.innerHTML = `
+    <div class="solo-night-box">
+      <div class="solo-night-who">
+        ${info.icon||'👤'} <b>${cur.name}</b> — ${rName}
+        <span class="solo-virt-badge" style="background:#2a2215;color:var(--yellow);border-color:var(--yellow)">Nominasiya</span>
+      </div>
+      <div class="solo-night-desc">Bu oyunçu kimi nominasiya etmək istəyir?</div>
+      <div class="solo-night-targets">
+        ${targets.map(t => `
+          <div class="solo-target-item" onclick="soloNominateSelectTarget('${t.id}',this)">
+            <div class="avatar">${t.name[0].toUpperCase()}</div>
+            <div class="pname">${t.name}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-confirm" style="margin-top:12px" id="solo-nominate-confirm" onclick="soloNominateConfirm('${cur.id}')" disabled>
+        Nominasiya et →
+      </button>
+      <button class="btn" style="margin-top:8px;background:var(--surface2);color:var(--muted)" onclick="soloNominateSkip()">
+        Keç (nominasiya etmə)
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+  window._soloNominateSelectedTarget = null;
+}
+
+function soloNominateSelectTarget(targetId, el) {
+  document.querySelectorAll('.solo-target-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  window._soloNominateSelectedTarget = targetId;
+  document.getElementById('solo-nominate-confirm').disabled = false;
+}
+
+function soloNominateConfirm(playerId) {
+  const targetId = window._soloNominateSelectedTarget;
+  if (!targetId) return;
+  document.getElementById('solo-night-overlay').style.display = 'none';
+
+  const adminId = soloAllRoles.find(p => p.isAdmin)?.id;
+  if (playerId === adminId) {
+    socket.emit('day:nominate', { targetId });
+  } else {
+    socket.emit('admin:bot_action', { botId: playerId, action: 'nominate', targetId });
+  }
+  _soloNominateIdx++;
+  soloNominateNext();
+}
+
+function soloNominateSkip() {
+  document.getElementById('solo-night-overlay').style.display = 'none';
+  _soloNominateIdx++;
+  soloNominateNext();
+}
+
+// Vote fazası — admin hər oyunçu üçün səs verir
+let _soloVoteQueue = [];
+let _soloVoteIdx   = 0;
+let _soloVotePlayers = [];
+
+function soloStartVote(players) {
+  if (!isSoloMode) return;
+  _soloVotePlayers = players;
+  _soloVoteQueue   = soloAllRoles.filter(p =>
+    players.find(cp => cp.id === p.id && cp.alive)
+  );
+  _soloVoteIdx = 0;
+  soloVoteNext();
+}
+
+function soloVoteNext() {
+  if (_soloVoteIdx >= _soloVoteQueue.length) {
+    toast('✅ Bütün səslər verildi');
+    return;
+  }
+  const cur = _soloVoteQueue[_soloVoteIdx];
+  soloCurrentPlayerId = cur.id;
+  renderSoloPanel();
+
+  const overlay = document.getElementById('solo-night-overlay');
+  const targets = _soloVotePlayers.filter(p => p.alive && p.id !== cur.id);
+  const info = ROLE_INFO[cur.role] || {};
+  const rName = ADMIN_ALL_ROLES.find(r=>r.key===cur.role)?.name || cur.role;
+
+  overlay.innerHTML = `
+    <div class="solo-night-box">
+      <div class="solo-night-who">
+        ${info.icon||'👤'} <b>${cur.name}</b> — ${rName}
+        <span class="solo-virt-badge">Səs ver</span>
+      </div>
+      <div class="solo-night-desc">Bu oyunçu kimi linç etmək istəyir?</div>
+      <div class="solo-night-targets">
+        ${targets.map(t => `
+          <div class="solo-target-item" onclick="soloVoteSelectTarget('${cur.id}','${t.id}',this)">
+            <div class="avatar">${t.name[0].toUpperCase()}</div>
+            <div class="pname">${t.name}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-confirm" style="margin-top:12px" id="solo-vote-confirm" onclick="soloVoteConfirm('${cur.id}')" disabled>
+        Səs ver →
+      </button>
+      <button class="btn" style="margin-top:8px;background:var(--surface2);color:var(--muted)" onclick="soloVoteSkip()">
+        Keç (səs vermə)
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+  window._soloVoteSelectedTarget = null;
+}
+
+function soloVoteSelectTarget(playerId, targetId, el) {
+  document.querySelectorAll('.solo-target-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  window._soloVoteSelectedTarget = targetId;
+  document.getElementById('solo-vote-confirm').disabled = false;
+}
+
+function soloVoteConfirm(playerId) {
+  const targetId = window._soloVoteSelectedTarget;
+  if (!targetId) return;
+  document.getElementById('solo-night-overlay').style.display = 'none';
+
+  const adminId = soloAllRoles.find(p=>p.isAdmin)?.id;
+  if (playerId === adminId) {
+    socket.emit('vote:cast', { targetId });
+  } else {
+    socket.emit('admin:bot_action', { botId: playerId, action:'vote', targetId });
+  }
+  _soloVoteIdx++;
+  soloVoteNext();
+}
+
+function soloVoteSkip() {
+  document.getElementById('solo-night-overlay').style.display = 'none';
+  _soloVoteIdx++;
+  soloVoteNext();
+}
+
+// ── Admin Panel ──────────────────────────────────────────────
+
+const ADMIN_ALL_ROLES = [
+  { key:'mafia',        name:'Mafiya Üzvü',   team:'bad'     },
+  { key:'cleaner',      name:'Təmizçi',        team:'bad'     },
+  { key:'blame',        name:'İttihamçı',      team:'bad'     },
+  { key:'roleblocker',  name:'Blokçu',         team:'bad'     },
+  { key:'police',       name:'Polis',          team:'good'    },
+  { key:'lookout',      name:'Gözətçi',        team:'good'    },
+  { key:'trapper',      name:'Tələçi',         team:'good'    },
+  { key:'snitch',       name:'Xəbərçi',        team:'good'    },
+  { key:'provoker',     name:'Provokatçı',     team:'good'    },
+  { key:'tracker',      name:'İzləyici',       team:'good'    },
+  { key:'doctor',       name:'Həkim',          team:'good'    },
+  { key:'citizen',      name:'Vətəndaş',       team:'good'    },
+  { key:'serialkiller', name:'Serial Killer',  team:'neutral' },
+  { key:'bomber',       name:'Bombacı',        team:'neutral' },
+  { key:'thief',        name:'Oğru',           team:'neutral' },
+  { key:'haunter',      name:'Ruh',            team:'neutral' },
+  { key:'survivor',     name:'Sağqalan',       team:'neutral' },
+];
+
+// Admin state
+let adminPlayerCount = 6;
+let adminPickedRole  = null;
+let adminCurrentTab  = 'roles';
+let adminDistValues  = { mafia:1, police:1, doctor:1, citizen:3 };
+
+function openAdmin() {
+  document.getElementById('admin-overlay').classList.add('open');
+  if (adminCurrentTab === 'roles') renderAdminRoles();
+  else renderAdminSim();
+}
+function closeAdmin() {
+  document.getElementById('admin-overlay').classList.remove('open');
+}
+
+function adminTab(tab) {
+  adminCurrentTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('atab-' + tab).classList.add('active');
+  document.getElementById('admin-tab-roles').style.display = tab === 'roles' ? '' : 'none';
+  document.getElementById('admin-tab-sim').style.display   = tab === 'sim'   ? '' : 'none';
+  if (tab === 'sim') renderAdminSim();
+}
+
+// ── ROLES tab ─────────────────────────────────────────────────
+function renderAdminRoles() {
+  const grid = document.getElementById('admin-roles-grid');
+  const teamLabel = { good:'😇 Yaxşı', bad:'😈 Pis', neutral:'⚖️ Neytral' };
+  const teamCls   = { good:'ateam-good', bad:'ateam-bad', neutral:'ateam-neutral' };
+  grid.innerHTML = ADMIN_ALL_ROLES.map(r => {
+    const info = ROLE_INFO[r.key] || {};
+    const picked = adminPickedRole === r.key;
+    return `<div class="admin-role-card${picked?' picked':''}" onclick="adminPickRole('${r.key}')">
+      <span class="admin-role-team ${teamCls[r.team]||'ateam-good'}">${teamLabel[r.team]||''}</span>
+      <div class="admin-role-name">${info.icon||''} ${r.name}</div>
+      <div class="admin-role-desc">${(info.desc||'').substring(0,55)}…</div>
+    </div>`;
+  }).join('');
+}
+
+function adminPickRole(key) {
+  adminPickedRole = key;
+  renderAdminRoles();
+  const info = ROLE_INFO[key];
+  const r    = ADMIN_ALL_ROLES.find(x => x.key === key);
+  if (!info || !r) return;
+  const teamName = {good:'😇 Yaxşılar (Şəhər)', bad:'😈 Pislər (Mafiya)', neutral:'⚖️ Neytral'}[r.team] || r.team;
+  document.getElementById('admin-role-log').textContent =
+    `${info.icon}  ${r.name}\nTərəf: ${teamName}\n\n${info.desc}\n\n${info.objective}`;
+  document.getElementById('admin-role-detail').style.display = '';
+}
+
+function adminTestRole() {
+  if (!adminPickedRole) return;
+  const r    = ADMIN_ALL_ROLES.find(x => x.key === adminPickedRole);
+  const info = ROLE_INFO[adminPickedRole] || {};
+  closeAdmin();
+  // Show role screen with fake data
+  const fakeMafiaTeam = (r.team === 'bad') ? ['Anar (Mafiya)', 'Leyla (Blokçu)'] : [];
+  showRoleScreen(adminPickedRole, r.name, fakeMafiaTeam);
+  // Override ackRole temporarily to go back to previous screen
+  window._prevAckRole = window.ackRole;
+  window.ackRole = function() {
+    window.ackRole = window._prevAckRole;
+    openAdmin();
+    // Restore the actual game screen
+    const activeScreens = document.querySelectorAll('.screen.active');
+    // Just go back to whatever was active before, which is now hidden
+    showScreen(currentPhase === 'lobby' ? 'lobby' :
+               currentPhase === 'night' ? 'night' :
+               currentPhase === 'day'   ? 'day'   : 'lobby');
+  };
+}
+
+// ── SIM tab ───────────────────────────────────────────────────
+const SIM_ROLES_LIST = [
+  { key:'mafia', name:'Mafiya', icon:'🔪', team:'bad' },
+  { key:'cleaner', name:'Təmizçi', icon:'🧹', team:'bad' },
+  { key:'roleblocker', name:'Blokçu', icon:'🚫', team:'bad' },
+  { key:'police', name:'Polis', icon:'🔍', team:'good' },
+  { key:'doctor', name:'Həkim', icon:'💉', team:'good' },
+  { key:'trapper', name:'Tələçi', icon:'🪤', team:'good' },
+  { key:'snitch', name:'Xəbərçi', icon:'🕵️', team:'good' },
+  { key:'citizen', name:'Vətəndaş', icon:'👤', team:'good' },
+  { key:'serialkiller', name:'Serial Killer', icon:'🗡️', team:'neutral' },
+  { key:'thief', name:'Oğru', icon:'🦝', team:'neutral' },
+  { key:'survivor', name:'Sağqalan', icon:'🛡️', team:'neutral' },
+];
+
+function renderAdminSim() {
+  const teamCls = { good:'ateam-good', bad:'ateam-bad', neutral:'ateam-neutral' };
+  const teamLbl = { good:'Yaxşı', bad:'Pis', neutral:'Neytral' };
+  const grid = document.getElementById('admin-dist-grid');
+  grid.innerHTML = SIM_ROLES_LIST.map(r => {
+    const cnt = adminDistValues[r.key] || 0;
+    return `<div class="admin-dist-row">
+      <span class="admin-dist-icon">${r.icon}</span>
+      <span class="admin-dist-name">${r.name}</span>
+      <span class="admin-dist-team ${teamCls[r.team]}">${teamLbl[r.team]}</span>
+      <button class="admin-dist-btn" onclick="adminDistChange('${r.key}',-1)">−</button>
+      <span class="admin-dist-cnt" id="adist-${r.key}">${cnt}</span>
+      <button class="admin-dist-btn" onclick="adminDistChange('${r.key}',1)">+</button>
+    </div>`;
+  }).join('');
+  updateAdminDistStatus();
+}
+
+function adminDistChange(key, d) {
+  adminDistValues[key] = Math.max(0, (adminDistValues[key]||0) + d);
+  const el = document.getElementById('adist-' + key);
+  if (el) el.textContent = adminDistValues[key];
+  updateAdminDistStatus();
+}
+
+function updateAdminDistStatus() {
+  const total = Object.values(adminDistValues).reduce((s,v)=>s+(v||0),0);
+  const count = adminPlayerCount;
+  const stat  = document.getElementById('admin-dist-status');
+  const badCount = (adminDistValues.mafia||0)+(adminDistValues.cleaner||0)+(adminDistValues.roleblocker||0);
+  if (total === count && badCount >= 1) {
+    stat.style.color = 'var(--green)';
+    stat.textContent = `✅ ${total}/${count} — Oyun hazırdır!`;
+  } else if (total === count && badCount < 1) {
+    stat.style.color = 'var(--accent)';
+    stat.textContent = `⚠️ ${total}/${count} — Minimum 1 Pis oyunçu lazımdır`;
+  } else {
+    stat.style.color = total > count ? 'var(--accent)' : 'var(--yellow)';
+    stat.textContent = `${total}/${count} oyunçu — ${total > count ? 'həddindən çox' : `${count-total} boş yer var`}`;
+  }
+}
+
+function adminChangeCount(d) {
+  adminPlayerCount = Math.max(2, Math.min(20, adminPlayerCount + d));
+  document.getElementById('admin-count').textContent = adminPlayerCount;
+  updateAdminDistStatus();
+}
+
+function adminRunSim() {
+  const total   = Object.values(adminDistValues).reduce((s,v)=>s+(v||0),0);
+  const badCount = (adminDistValues.mafia||0)+(adminDistValues.cleaner||0)+(adminDistValues.roleblocker||0);
+  const log     = document.getElementById('admin-sim-log');
+  if (total !== adminPlayerCount) { log.style.display='block'; log.textContent='❌ Rol sayı oyunçu sayına bərabər deyil!'; return; }
+  if (badCount < 1) { log.style.display='block'; log.textContent='❌ Minimum 1 Pis lazımdır!'; return; }
+
+  // Build pool
+  const pool = [];
+  for (const r of SIM_ROLES_LIST) {
+    for (let i=0; i<(adminDistValues[r.key]||0); i++) pool.push(r);
+  }
+  for (let i=pool.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]] = [pool[j],pool[i]];
+  }
+
+  const NAMES = ['Anar','Leyla','Murad','Nigar','Elçin','Gülnar','Tural','Sevinc',
+    'Kamran','Könül','Rauf','Aytən','Vüsal','Şəbnəm','Elnur','Zəhra','Bəhruz','Namiq','Xədicə','Rəşad'];
+  const teamLbl = { good:'😇', bad:'😈', neutral:'⚖️' };
+
+  let out = `🎮 ${adminPlayerCount} oyunçulu simulyasiya\n` + '─'.repeat(28) + '\n';
+  const mafiaNames = [];
+  pool.forEach((r, i) => {
+    const name = NAMES[i] || `Oyunçu${i+1}`;
+    out += `${(i+1).toString().padStart(2)}. ${name.padEnd(9)} ${r.icon} ${r.name.padEnd(13)} ${teamLbl[r.team]||''}\n`;
+    if (r.team === 'bad') mafiaNames.push(name);
+  });
+  out += '\n' + '─'.repeat(28) + '\n';
+  out += `😈 Pislər: ${mafiaNames.join(', ')}\n`;
+  out += `😇 Yaxşılar: ${pool.filter(r=>r.team==='good').length} nəfər\n`;
+  const neutrals = pool.filter(r=>r.team==='neutral');
+  if (neutrals.length) out += `⚖️ Neytral: ${neutrals.map(r=>r.name).join(', ')}\n`;
+
+  log.style.display = 'block';
+  log.textContent   = out;
+}
+
+// Close on backdrop click
+document.getElementById('admin-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeAdmin();
+});
+
+
+function startTimer(name, total) {
+  stopTimer(name);
+  let rem = total;
+  const bar   = document.getElementById(name + '-bar');
+  const label = document.getElementById(name + '-label');
+  if (bar)   bar.style.width = '100%';
+  if (label) label.textContent = `${rem} saniyə`;
+  timers[name] = setInterval(() => {
+    rem--;
+    if (bar)   bar.style.width = (rem / total * 100) + '%';
+    if (label) label.textContent = rem > 0 ? `${rem} saniyə` : '';
+    if (rem <= 0) stopTimer(name);
+  }, 1000);
+}
+function stopTimer(name)  { clearInterval(timers[name]); delete timers[name]; }
+function stopAllTimers()  { Object.keys(timers).forEach(stopTimer); }
+
+// ── Utils ────────────────────────────────────────────────────
+function copyCode() {
+  navigator.clipboard.writeText(roomCode)
+    .then(() => toast('📋 Kod kopyalandı: ' + roomCode));
+}
+function goHome() { sessionStorage.clear(); window.location.href = '/'; }
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
