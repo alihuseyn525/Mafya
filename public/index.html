@@ -8,9 +8,374 @@
     :root {
       --bg:#0f0e17;--surface:#1a1825;--border:#2e2b45;
       --accent:#c9392c;--accent2:#e8643a;--text:#e8e6f0;--muted:#7a7890;
-      --green:#2ecc71;--yellow:#f1c40f;--radius:10px;
+      --green:#2ecc71;--yellow:#f1c40f;--purple:#9b59b6;--radius:10px;
       --font-display:'Georgia',serif;--font-body:'Segoe UI',system-ui,sans-serif;
     }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-body);
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:24px}
+    .hero{text-align:center;margin-bottom:40px}
+    .hero-title{font-family:var(--font-display);font-size:clamp(2.4rem,6vw,4rem);
+      letter-spacing:.12em;text-transform:uppercase;display:inline-block}
+    .hero-title::after{content:'';display:block;height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      margin-top:6px;border-radius:2px}
+    .hero-sub{margin-top:10px;color:var(--muted);font-size:.95rem;letter-spacing:.05em}
+    .card{background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);padding:28px 32px;width:100%;max-width:440px}
+    .tabs{display:flex;margin-bottom:28px;border:1px solid var(--border);
+      border-radius:var(--radius);overflow:hidden}
+    .tab-btn{flex:1;padding:10px;background:transparent;border:none;
+      color:var(--muted);font-size:.9rem;cursor:pointer;transition:background .18s,color .18s}
+    .tab-btn.active{background:var(--accent);color:#fff;font-weight:600}
+    .form-group{margin-bottom:16px}
+    label{display:block;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:6px}
+    input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--text);font-size:1rem;
+      font-family:var(--font-body);outline:none;transition:border-color .18s}
+    input:focus{border-color:var(--accent)}
+    input::placeholder{color:var(--muted)}
+    .btn{width:100%;padding:13px;border:none;border-radius:var(--radius);font-size:1rem;
+      font-weight:700;letter-spacing:.04em;cursor:pointer;transition:opacity .18s,transform .1s}
+    .btn:active{transform:scale(.98)}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+    .btn-admin{background:linear-gradient(135deg,#1a3a5a,#2980b9);color:#fff;margin-top:10px}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .error-msg{color:#ff6b6b;font-size:.85rem;margin-top:12px;min-height:20px;text-align:center}
+    .panel{display:none}.panel.active{display:block}
+    .loader{display:none;text-align:center;margin-top:16px;color:var(--muted);font-size:.9rem}
+    .loader.visible{display:block}
+    @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+    .dot{display:inline-block;animation:blink 1.2s infinite}
+    .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+
+    /* Admin overlay */
+    .admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;
+      display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+    .admin-overlay.open{display:flex}
+    .admin-panel{background:var(--surface);border:1px solid var(--border);
+      border-radius:14px;width:100%;max-width:480px;padding:20px;margin-top:8px}
+    .admin-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .admin-title-txt{font-family:var(--font-display);font-size:1.05rem;letter-spacing:.06em}
+    .admin-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer}
+    .admin-sect{margin-bottom:16px}
+    .admin-sect-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;
+      color:var(--muted);margin-bottom:8px}
+    .admin-tabs{display:flex;gap:6px;margin-bottom:14px}
+    .admin-tab{flex:1;padding:8px;border:1px solid var(--border);background:#12111e;
+      color:var(--muted);border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer}
+    .admin-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;border-color:transparent}
+
+    /* Dist rows */
+    .dist-row{display:flex;align-items:center;gap:8px;padding:5px 0;
+      border-bottom:1px solid var(--border)}
+    .dist-row:last-child{border:none}
+    .dist-icon{font-size:1rem;width:20px;text-align:center}
+    .dist-name{flex:1;font-size:.82rem}
+    .dist-team{font-size:.62rem;padding:2px 5px;border-radius:8px;font-weight:700}
+    .dt-bad    {background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+    .dt-good   {background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .dt-neutral{background:#1e1535;border:1px solid var(--purple);color:var(--purple)}
+    .dist-cnt{font-weight:700;width:18px;text-align:center;font-size:.95rem}
+    .dist-btn{width:26px;height:26px;border:1px solid var(--border);background:#12111e;
+      color:var(--text);border-radius:5px;font-size:.9rem;cursor:pointer}
+    .dist-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .dist-status{font-size:.82rem;padding:8px;border-radius:6px;text-align:center;
+      margin:10px 0;font-weight:600}
+    .ds-ok  {background:#0f2a1a;border:1px solid var(--green);color:var(--green)}
+    .ds-warn{background:#2a1800;border:1px solid var(--yellow);color:var(--yellow)}
+    .ds-err {background:#2a0f0f;border:1px solid var(--accent);color:var(--accent)}
+
+    /* Role info tab */
+    .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .role-card-sm{background:#12111e;border:1px solid var(--border);
+      border-radius:8px;padding:9px;cursor:pointer;transition:border-color .15s}
+    .role-card-sm:hover{border-color:var(--accent2)}
+    .role-card-sm.picked{border-color:var(--green)}
+    .rcname{font-size:.8rem;font-weight:700;margin-bottom:2px}
+    .rcdesc{font-size:.68rem;color:var(--muted);line-height:1.3}
+    .rcteam{font-size:.62rem;padding:2px 5px;border-radius:8px;font-weight:700;
+      display:inline-block;margin-bottom:4px}
+    .admin-log{background:#12111e;border:1px solid var(--border);border-radius:8px;
+      padding:10px;font-size:.78rem;color:var(--muted);max-height:160px;
+      overflow-y:auto;line-height:1.7;white-space:pre-wrap}
+    .start-btn{width:100%;padding:12px;border:none;border-radius:8px;
+      font-size:.92rem;font-weight:700;cursor:pointer;margin-top:10px}
+    .start-primary{background:linear-gradient(135deg,#1a5a2a,var(--green));color:#fff}
+    @media(max-width:440px){.role-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- Admin Overlay -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-panel">
+    <div class="admin-hdr">
+      <div class="admin-title-txt">ðŸ› ï¸ Admin â€” Solo Test</div>
+      <button class="admin-close" onclick="closeAdmin()">âœ•</button>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" id="atab-dist" onclick="adminTab('dist')">ðŸŽ® Oyun qur</button>
+      <button class="admin-tab" id="atab-roles" onclick="adminTab('roles')">ðŸ“‹ Rollar</button>
+    </div>
+
+    <!-- DIST TAB -->
+    <div id="atab-dist-panel">
+      <div class="admin-sect">
+        <div class="admin-sect-lbl">Admin adÄ±</div>
+        <input id="admin-name" type="text" placeholder="AdÄ±nÄ± daxil et" maxlength="16" value="Admin"/>
+      </div>
+      <div class="admin-sect">
+        <div class="admin-sect-lbl">Rol paylanmasÄ± (Ã¶zÃ¼n + botlar)</div>
+        <div id="admin-dist-list"></div>
+        <div class="dist-status ds-warn" id="admin-dist-status">Rollara oyunÃ§u É™lavÉ™ et</div>
+      </div>
+      <button class="start-btn start-primary" id="admin-start-btn" onclick="adminStartGame()" disabled>
+        ðŸŽ® Oyunu BaÅŸlat
+      </button>
+      <div class="admin-log" id="admin-err-log" style="display:none;margin-top:8px"></div>
+    </div>
+
+    <!-- ROLES TAB -->
+    <div id="atab-roles-panel" style="display:none">
+      <div class="role-grid" id="admin-role-grid"></div>
+      <div class="admin-log" id="admin-role-log" style="margin-top:10px">Bir rol seÃ§in...</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="hero">
+  <h1 class="hero-title">Mafiya</h1>
+  <p class="hero-sub">ÅžÉ™hÉ™r yatÄ±r. Mafiya oyanÄ±r.</p>
+</div>
+<div class="card">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('create')">Otaq Yarat</button>
+    <button class="tab-btn" onclick="switchTab('join')">QoÅŸul</button>
+  </div>
+  <div id="panel-create" class="panel active">
+    <div class="form-group">
+      <label for="create-name">AdÄ±n</label>
+      <input id="create-name" type="text" maxlength="20" placeholder="AdÄ±nÄ± daxil et"/>
+    </div>
+    <button class="btn btn-primary" onclick="createRoom()">Otaq Yarat</button>
+    <button class="btn btn-admin" onclick="openAdmin()">âš™ï¸ Admin â€” Solo Test Oyunu</button>
+  </div>
+  <div id="panel-join" class="panel">
+    <div class="form-group">
+      <label for="join-name">AdÄ±n</label>
+      <input id="join-name" type="text" maxlength="20" placeholder="AdÄ±nÄ± daxil et"/>
+    </div>
+    <div class="form-group">
+      <label for="join-code">Otaq Kodu</label>
+      <input id="join-code" type="text" maxlength="6" placeholder="XXXXXX"
+        style="text-transform:uppercase;letter-spacing:.2em;font-size:1.1rem"/>
+    </div>
+    <button class="btn btn-primary" onclick="joinRoom()">QoÅŸul</button>
+  </div>
+  <div class="error-msg" id="error-msg"></div>
+  <div class="loader" id="loader">
+    QoÅŸulur<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  // â”€â”€ Normal game â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0)===(tab==='create')));
+    document.getElementById('panel-create').classList.toggle('active',tab==='create');
+    document.getElementById('panel-join').classList.toggle('active',tab==='join');
+    setError('');
+  }
+  function setError(msg){document.getElementById('error-msg').textContent=msg}
+  function setLoading(on){
+    document.getElementById('loader').classList.toggle('visible',on);
+    document.querySelectorAll('.btn').forEach(b=>b.disabled=on);
+  }
+  function goToGame(code, name, soloData) {
+    sessionStorage.setItem('playerName', name);
+    sessionStorage.setItem('roomCode', code);
+    if (soloData) sessionStorage.setItem('soloData', JSON.stringify(soloData));
+    window.location.href = '/game.html';
+  }
+  function createRoom(){
+    const name = document.getElementById('create-name').value.trim();
+    if (!name) return setError('AdÄ±nÄ± daxil et');
+    setLoading(true);
+    socket.emit('room:create', {name}, (res) => {
+      setLoading(false);
+      if (!res.ok) return setError(res.error);
+      goToGame(res.code, name);
+    });
+  }
+  function joinRoom(){
+    const name = document.getElementById('join-name').value.trim();
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    if (!name) return setError('AdÄ±nÄ± daxil et');
+    if (code.length !== 6) return setError('Kod 6 simvol olmalÄ±dÄ±r');
+    setLoading(true);
+    socket.emit('room:join', {name, code}, (res) => {
+      setLoading(false);
+      if (!res.ok) return setError(res.error);
+      goToGame(res.code, name);
+    });
+  }
+
+  // â”€â”€ Admin panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const ROLES_DEF = [
+    { key:'mafia',       name:'ðŸ”ª Mafiya',       team:'bad',     desc:'HÉ™r gecÉ™ Ã¶ldÃ¼rÃ¼r' },
+    { key:'cleaner',     name:'ðŸ§¹ TÉ™mizÃ§i',      team:'bad',     desc:'Mafiya, Ã¶lÃ¼ kimliyi gizlÉ™dir' },
+    { key:'roleblocker', name:'ðŸš« BlokÃ§u',       team:'bad',     desc:'Mafiya, gÃ¼cÃ¼ bloklayÄ±r' },
+    { key:'police',      name:'ðŸ” Polis',         team:'good',    desc:'GecÉ™ yoxlayÄ±r+bloklayÄ±r' },
+    { key:'lookout',     name:'ðŸ‘ï¸ GÃ¶zÉ™tÃ§i',     team:'good',    desc:'Kimin yanÄ±na kim getdi?' },
+    { key:'trapper',     name:'ðŸª¤ TÉ™lÉ™Ã§i',       team:'good',    desc:'GecÉ™ tÉ™lÉ™ qurur' },
+    { key:'snitch',      name:'ðŸ•µï¸ XÉ™bÉ™rÃ§i',    team:'good',    desc:'Bir oyunÃ§unun rolunu gÃ¶rÃ¼r' },
+    { key:'provoker',    name:'ðŸ˜¤ ProvokatÃ§Ä±',   team:'good',    desc:'+2 sÉ™s penalty' },
+    { key:'tracker',     name:'ðŸ›¤ï¸ Ä°zlÉ™yici',   team:'good',    desc:'HÉ™dÉ™fin hara getdiyini gÃ¶rÃ¼r' },
+    { key:'doctor',      name:'ðŸ’‰ HÉ™kim',         team:'good',    desc:'GecÉ™ qoruyur' },
+    { key:'citizen',     name:'ðŸ‘¤ VÉ™tÉ™ndaÅŸ',     team:'good',    desc:'XÃ¼susi gÃ¼csÃ¼z' },
+    { key:'serialkiller',name:'ðŸ—¡ï¸ Serial Killer',team:'neutral', desc:'HamÄ±nÄ± Ã¶ldÃ¼rÃ¼r, tÉ™k qalÄ±r' },
+    { key:'thief',       name:'ðŸ¦ OÄŸru',          team:'neutral', desc:'Rol oÄŸurlayÄ±r' },
+    { key:'survivor',    name:'ðŸ›¡ï¸ SaÄŸqalan',    team:'neutral', desc:'SaÄŸ qalsa qalib' },
+  ];
+
+  const ROLE_FULL_DESC = {
+    mafia:'HÉ™r gecÉ™ komandanla birlikdÉ™ bir vÉ™tÉ™ndaÅŸÄ± Ã¶ldÃ¼rÃ¼rsÃ¼nÃ¼z. GÃ¼ndÃ¼z Ã¶zÃ¼nÃ¼zÃ¼ gizlÉ™din.',
+    cleaner:'MafiyanÄ±n Ã¼zvÃ¼sÃ¼nÃ¼z. GecÉ™ Ã¶ldÃ¼rÃ¼lÉ™n mafiya Ã¼zvÃ¼nÃ¼n rolunu gizlÉ™dirsiniz.',
+    roleblocker:'MafiyanÄ±n Ã¼zvÃ¼sÃ¼nÃ¼z. HÉ™r gecÉ™ bir oyunÃ§unu bloklayÄ±rsÄ±nÄ±z.',
+    police:'HÉ™r gecÉ™ bir oyunÃ§unu yoxlayÄ±r vÉ™ bloklayÄ±rsÄ±nÄ±z. Pis/yaxÅŸÄ± olduÄŸunu bilirsiniz.',
+    lookout:'HÉ™r gecÉ™ bir oyunÃ§unu izlÉ™yirsiniz â€” yanÄ±na kimin gÉ™ldiyini gÃ¶rÃ¼rsÃ¼nÃ¼z.',
+    trapper:'HÉ™r gecÉ™ bir yerÉ™ tÉ™lÉ™ qurursunuz. Ora gÉ™lÉ™n oyunÃ§u tÉ™lÉ™yÉ™ dÃ¼ÅŸÃ¼r.',
+    snitch:'HÉ™r gecÉ™ bir oyunÃ§unun rolunu Ã¶yrÉ™nirsiniz (1 dÉ™fÉ™).',
+    provoker:'HÉ™r gecÉ™ bir oyunÃ§unu hÉ™dÉ™f alÄ±rsÄ±nÄ±z â€” sabah onun É™leyhinÉ™ +2 sÉ™s verilir.',
+    tracker:'HÉ™r gecÉ™ bir oyunÃ§unu izlÉ™yirsiniz â€” o oyunÃ§unun hara getdiyini gÃ¶rÃ¼rsÃ¼nÃ¼z.',
+    doctor:'HÉ™r gecÉ™ bir oyunÃ§unu qoruyursunuz. Ã–zÃ¼nÃ¼zÃ¼ dÉ™ qoruya bilÉ™rsiniz.',
+    citizen:'XÃ¼susi gÃ¼cÃ¼nÃ¼z yoxdur. MÃ¼zakirÉ™ vÉ™ sÉ™svermÉ™ sizin silahÄ±nÄ±zdÄ±r.',
+    serialkiller:'TÉ™k baÅŸÄ±nÄ±za savaÅŸÄ±rsÄ±nÄ±z. HÉ™r gecÉ™ bir oyunÃ§unu Ã¶ldÃ¼rÃ¼rsÃ¼nÃ¼z.',
+    thief:'HÉ™r gecÉ™ bir oyunÃ§unun rolunu oÄŸurlayÄ±rsÄ±nÄ±z.',
+    survivor:'TÉ™rÉ™f seÃ§mirsiniz â€” saÄŸ qalmaq kifayÉ™tdir. Bir dÉ™fÉ™ Ã¶lÃ¼mdÉ™n qoruna bilÉ™rsiniz.',
+  };
+
+  let adminDistValues = { mafia:1, doctor:1, citizen:2 };
+  let adminPickedRole = null;
+  let adminCurrentTab = 'dist';
+
+  function openAdmin() {
+    document.getElementById('admin-overlay').classList.add('open');
+    renderDistList();
+    renderRoleGrid();
+  }
+  function closeAdmin() {
+    document.getElementById('admin-overlay').classList.remove('open');
+  }
+  document.getElementById('admin-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('admin-overlay')) closeAdmin();
+  });
+
+  function adminTab(tab) {
+    adminCurrentTab = tab;
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('atab-' + tab).classList.add('active');
+    document.getElementById('atab-dist-panel').style.display  = tab === 'dist'  ? '' : 'none';
+    document.getElementById('atab-roles-panel').style.display = tab === 'roles' ? '' : 'none';
+  }
+
+  function renderDistList() {
+    const tc = { bad:'dt-bad', good:'dt-good', neutral:'dt-neutral' };
+    const tl = { bad:'Pis', good:'YaxÅŸÄ±', neutral:'Neytral' };
+    document.getElementById('admin-dist-list').innerHTML = ROLES_DEF.map(r => `
+      <div class="dist-row">
+        <span class="dist-icon">${r.name.split(' ')[0]}</span>
+        <span class="dist-name">${r.name.split(' ').slice(1).join(' ')}</span>
+        <span class="dist-team ${tc[r.team]}">${tl[r.team]}</span>
+        <button class="dist-btn" onclick="distChange('${r.key}',-1)">âˆ’</button>
+        <span class="dist-cnt" id="adist-${r.key}">${adminDistValues[r.key]||0}</span>
+        <button class="dist-btn" onclick="distChange('${r.key}',1)">+</button>
+      </div>`).join('');
+    updateDistStatus();
+  }
+
+  function distChange(key, d) {
+    adminDistValues[key] = Math.max(0, (adminDistValues[key]||0) + d);
+    const el = document.getElementById('adist-' + key);
+    if (el) el.textContent = adminDistValues[key];
+    updateDistStatus();
+  }
+
+  function updateDistStatus() {
+    const total   = Object.values(adminDistValues).reduce((s,v)=>s+(v||0),0);
+    const badCnt  = (adminDistValues.mafia||0)+(adminDistValues.cleaner||0)+(adminDistValues.roleblocker||0);
+    const el      = document.getElementById('admin-dist-status');
+    const startBtn= document.getElementById('admin-start-btn');
+    if (total < 2) {
+      el.className='dist-status ds-err'; el.textContent=`âŒ Minimum 2 oyunÃ§u lazÄ±mdÄ±r (hazÄ±rda: ${total})`;
+      startBtn.disabled=true;
+    } else if (badCnt < 1) {
+      el.className='dist-status ds-err'; el.textContent='âŒ Minimum 1 Pis oyunÃ§u lazÄ±mdÄ±r';
+      startBtn.disabled=true;
+    } else {
+      el.className='dist-status ds-ok'; el.textContent=`âœ… ${total} oyunÃ§u â€” hazÄ±rdÄ±r!`;
+      startBtn.disabled=false;
+    }
+  }
+
+  function renderRoleGrid() {
+    const tc = { bad:'dt-bad', good:'dt-good', neutral:'dt-neutral' };
+    const tl = { bad:'ðŸ˜ˆ Pis', good:'ðŸ˜‡ YaxÅŸÄ±', neutral:'âš–ï¸ Neytral' };
+    document.getElementById('admin-role-grid').innerHTML = ROLES_DEF.map(r => `
+      <div class="role-card-sm ${adminPickedRole===r.key?'picked':''}" onclick="pickRole('${r.key}')">
+        <span class="rcteam ${tc[r.team]}">${tl[r.team]}</span>
+        <div class="rcname">${r.name}</div>
+        <div class="rcdesc">${r.desc}</div>
+      </div>`).join('');
+  }
+
+  function pickRole(key) {
+    adminPickedRole = key;
+    renderRoleGrid();
+    const r = ROLES_DEF.find(x=>x.key===key);
+    const desc = ROLE_FULL_DESC[key] || r?.desc || '';
+    const tc = { bad:'ðŸ˜ˆ PislÉ™r', good:'ðŸ˜‡ YaxÅŸÄ±lar', neutral:'âš–ï¸ Neytral' };
+    document.getElementById('admin-role-log').textContent =
+      `${r.name}\nTÉ™rÉ™f: ${tc[r.team]||''}\n\n${desc}`;
+  }
+
+  function adminStartGame() {
+    const name = document.getElementById('admin-name').value.trim() || 'Admin';
+    const errLog = document.getElementById('admin-err-log');
+    errLog.style.display='none';
+    document.getElementById('admin-start-btn').disabled = true;
+    document.getElementById('admin-start-btn').textContent = 'â³ BaÅŸladÄ±lÄ±r...';
+
+    socket.emit('admin:solo', { name, roleConfig: adminDistValues }, (res) => {
+      document.getElementById('admin-start-btn').disabled = false;
+      document.getElementById('admin-start-btn').textContent = 'ðŸŽ® Oyunu BaÅŸlat';
+      if (!res.ok) {
+        errLog.style.display='block';
+        errLog.textContent = 'âŒ XÉ™ta: ' + res.error;
+        return;
+      }
+      closeAdmin();
+      goToGame(res.code, name, { soloMode: true, allRoles: res.allRoles });
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.panel.active')?.id;
+    if (active === 'panel-create') createRoom(); else joinRoom();
+  });
+</script>
+</body>
+</html>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bg);color:var(--text);font-family:var(--font-body);
       min-height:100vh;display:flex;flex-direction:column;align-items:center;
@@ -54,35 +419,35 @@
 <body>
 <div class="hero">
   <h1 class="hero-title">Mafiya</h1>
-  <p class="hero-sub">Şəhər yatır. Mafiya oyanır.</p>
+  <p class="hero-sub">ÅžÉ™hÉ™r yatÄ±r. Mafiya oyanÄ±r.</p>
 </div>
 <div class="card">
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('create')">Otaq Yarat</button>
-    <button class="tab-btn" onclick="switchTab('join')">Qoşul</button>
+    <button class="tab-btn" onclick="switchTab('join')">QoÅŸul</button>
   </div>
   <div id="panel-create" class="panel active">
     <div class="form-group">
-      <label for="create-name">Adın</label>
-      <input id="create-name" type="text" maxlength="20" placeholder="Adını daxil et"/>
+      <label for="create-name">AdÄ±n</label>
+      <input id="create-name" type="text" maxlength="20" placeholder="AdÄ±nÄ± daxil et"/>
     </div>
     <button class="btn btn-primary" onclick="createRoom()">Otaq Yarat</button>
   </div>
   <div id="panel-join" class="panel">
     <div class="form-group">
-      <label for="join-name">Adın</label>
-      <input id="join-name" type="text" maxlength="20" placeholder="Adını daxil et"/>
+      <label for="join-name">AdÄ±n</label>
+      <input id="join-name" type="text" maxlength="20" placeholder="AdÄ±nÄ± daxil et"/>
     </div>
     <div class="form-group">
       <label for="join-code">Otaq Kodu</label>
       <input id="join-code" type="text" maxlength="6" placeholder="XXXXXX"
         style="text-transform:uppercase;letter-spacing:.2em;font-size:1.1rem"/>
     </div>
-    <button class="btn btn-primary" onclick="joinRoom()">Qoşul</button>
+    <button class="btn btn-primary" onclick="joinRoom()">QoÅŸul</button>
   </div>
   <div class="error-msg" id="error-msg"></div>
   <div class="loader" id="loader">
-    Qoşulur<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+    QoÅŸulur<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
   </div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
@@ -106,7 +471,7 @@
   }
   function createRoom(){
     const name=document.getElementById('create-name').value.trim();
-    if(!name) return setError('Adını daxil et');
+    if(!name) return setError('AdÄ±nÄ± daxil et');
     setLoading(true);
     socket.emit('room:create',{name},(res)=>{
       setLoading(false);
@@ -117,8 +482,8 @@
   function joinRoom(){
     const name=document.getElementById('join-name').value.trim();
     const code=document.getElementById('join-code').value.trim().toUpperCase();
-    if(!name) return setError('Adını daxil et');
-    if(code.length!==6) return setError('Kod 6 simvol olmalıdır');
+    if(!name) return setError('AdÄ±nÄ± daxil et');
+    if(code.length!==6) return setError('Kod 6 simvol olmalÄ±dÄ±r');
     setLoading(true);
     socket.emit('room:join',{name,code},(res)=>{
       setLoading(false);
@@ -133,4 +498,4 @@
   });
 </script>
 </body>
-</html>
+  </html>
