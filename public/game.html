@@ -76,7 +76,13 @@
     .btn-yellow{background:linear-gradient(135deg,#7a5a00,var(--yellow));color:#000;width:100%}
 
     /* Role card */
-    .role-card{text-align:center;padding:28px 20px}
+    .role-card{text-align:center;padding:28px 20px;position:relative}
+    .role-card-flip{animation:roleCardIn .38s cubic-bezier(.2,.8,.3,1.15)}
+    @keyframes roleCardIn{from{opacity:0;transform:scale(.88) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .role-countdown{position:absolute;top:10px;right:12px;width:30px;height:30px;
+      border-radius:50%;background:var(--surface2);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:.85rem;
+      font-weight:700;color:var(--muted)}
     .role-icon{font-size:3.5rem;margin-bottom:10px}
     .role-name{font-family:var(--font-display);font-size:1.9rem;letter-spacing:.08em;margin-bottom:6px}
     .role-name.mafia{color:var(--accent)}
@@ -232,6 +238,80 @@
     .result-title{font-family:var(--font-display);font-size:2rem;letter-spacing:.08em;margin-bottom:7px}
     .result-town{color:var(--green)}.result-mafia{color:var(--accent)}
     .result-maniac{color:var(--purple)}.result-sk{color:#e74c3c}.result-desc{color:var(--muted);font-size:.88rem}
+    /* ══ Gecə ekranı — hədəf siyahısı (baza oyun, solo deyil) ══ */
+    #night-players.player-list{gap:8px}
+    #night-players .player-item{
+      padding:12px 14px;border-radius:12px;position:relative;
+      background:linear-gradient(135deg,var(--surface2),#1d1a2e);
+      border:1px solid var(--border);
+      opacity:0;animation:nightItemIn .3s ease forwards;
+    }
+    @keyframes nightItemIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    #night-players .avatar{width:37px;height:37px;font-size:.95rem;box-shadow:0 0 0 2px var(--surface)}
+    #night-players .pname{font-weight:600}
+    #night-players .player-item.clickable:hover{
+      border-color:var(--accent2);transform:translateY(-1px);
+    }
+    #night-players .player-item.selected{
+      background:linear-gradient(135deg,#2a1a18,#241416);
+      box-shadow:0 0 0 1px var(--accent2) inset;
+    }
+    #night-players .night-check{
+      display:none;width:22px;height:22px;border-radius:50%;flex-shrink:0;
+      align-items:center;justify-content:center;font-size:.8rem;font-weight:700;
+      background:var(--accent2);color:#fff;
+    }
+    #night-players .player-item.selected .night-check{display:flex}
+    /* ══ Səsvermə ekranı — səs vermə siyahısı (baza oyun, solo deyil) ══ */
+    #vote-players.player-list{gap:8px}
+    #vote-players .player-item{
+      padding:12px 14px;border-radius:12px;position:relative;
+      background:linear-gradient(135deg,var(--surface2),#1d1a2e);
+      border:1px solid var(--border);
+      opacity:0;animation:voteItemIn .3s ease forwards;
+    }
+    @keyframes voteItemIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    #vote-players .avatar{width:37px;height:37px;font-size:.95rem;box-shadow:0 0 0 2px var(--surface)}
+    #vote-players .pname{font-weight:600}
+    #vote-players .player-item.clickable:hover{
+      border-color:var(--accent2);transform:translateY(-1px);
+    }
+    #vote-players .player-item.selected{
+      background:linear-gradient(135deg,#2a1a18,#241416);
+      box-shadow:0 0 0 1px var(--accent2) inset;
+    }
+    #vote-players .vote-check{
+      display:none;width:22px;height:22px;border-radius:50%;flex-shrink:0;
+      align-items:center;justify-content:center;font-size:.8rem;font-weight:700;
+      background:var(--accent2);color:#fff;
+    }
+    #vote-players .player-item.selected .vote-check{display:flex}
+    #vote-players .badges{flex-shrink:0}
+    /* ══ Gündüz ekranı — nominasiya siyahısı (baza oyun, solo deyil) ══ */
+    #day-players.player-list{gap:8px}
+    #day-players .player-item{
+      padding:12px 14px;border-radius:12px;position:relative;
+      background:linear-gradient(135deg,var(--surface2),#1d1a2e);
+      border:1px solid var(--border);
+      opacity:0;animation:dayItemIn .3s ease forwards;
+    }
+    @keyframes dayItemIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    #day-players .avatar{width:37px;height:37px;font-size:.95rem;box-shadow:0 0 0 2px var(--surface)}
+    #day-players .player-item.dead{background:var(--surface);opacity:.5!important;animation:none}
+    #day-players .pname{font-weight:600}
+    #day-players .player-item.clickable:hover{
+      border-color:var(--accent2);transform:translateY(-1px);
+    }
+    #day-players .player-item.selected{
+      background:linear-gradient(135deg,#2a1a18,#241416);
+      box-shadow:0 0 0 1px var(--accent2) inset;
+    }
+    #day-players .day-check{
+      display:none;width:22px;height:22px;border-radius:50%;flex-shrink:0;
+      align-items:center;justify-content:center;font-size:.8rem;font-weight:700;
+      background:var(--accent2);color:#fff;
+    }
+    #day-players .player-item.selected .day-check{display:flex}
     .reveal-list{display:flex;flex-direction:column;gap:7px}
     .reveal-item{display:flex;align-items:center;gap:10px;padding:10px 13px;
       background:var(--surface2);border-radius:8px}
@@ -310,6 +390,40 @@
       .card{padding:16px 14px}
       .phase-title{font-size:1.3rem}
     }
+
+    /* ══════════════════ LOBBY (screen-lobby) ══════════════════ */
+    body{background:radial-gradient(ellipse 900px 500px at 50% -10%,#241f38 0%,var(--bg) 60%);}
+    #screen-lobby .card{position:relative;overflow:hidden}
+    #screen-lobby .card-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    #screen-lobby .card-title-row .card-title{margin-bottom:0}
+    #screen-lobby .lobby-count-pill{font-size:.72rem;font-weight:700;color:var(--text);
+      background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+      padding:3px 11px;letter-spacing:.03em}
+    #lobby-players{gap:8px}
+    #screen-lobby .player-item{padding:11px 14px;border-radius:12px;position:relative;
+      background:linear-gradient(135deg,var(--surface2),#1d1a2e);
+      border:1px solid var(--border);opacity:0;
+      animation:lobbyIn .38s ease forwards}
+    #screen-lobby .player-item.offline{background:var(--surface2)}
+    @keyframes lobbyIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    #screen-lobby .avatar-wrap{position:relative;flex-shrink:0}
+    #screen-lobby .avatar{width:38px;height:38px;font-size:.95rem;box-shadow:0 0 0 2px var(--surface)}
+    #screen-lobby .status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;
+      border-radius:50%;border:2px solid var(--surface2);background:var(--green)}
+    #screen-lobby .status-dot.off{background:var(--muted)}
+    #screen-lobby .pname{font-weight:600}
+    #screen-lobby .pname .you-tag{color:var(--muted);font-weight:400;font-size:.82em}
+    #screen-lobby .lobby-wait-hint{display:flex;align-items:center;justify-content:center;gap:9px;
+      text-align:center;color:var(--muted);font-size:.88rem;padding:22px 16px}
+    #screen-lobby .wait-icon{font-size:1.3rem;animation:waitPulse 1.8s ease-in-out infinite}
+    @keyframes waitPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+    #screen-lobby .wait-dots span{animation:blink 1.2s infinite}
+    #screen-lobby .wait-dots span:nth-child(2){animation-delay:.2s}
+    #screen-lobby .wait-dots span:nth-child(3){animation-delay:.4s}
+    #config-card .card-title{display:flex;align-items:center;gap:7px}
+    #screen-lobby .lobby-progress-wrap{background:var(--surface2);border-radius:6px;height:7px;
+      overflow:hidden;margin-top:10px;border:1px solid var(--border)}
+    #screen-lobby .lobby-progress-bar{height:100%;border-radius:6px;transition:width .25s ease,background .25s ease}
   </style>
 </head>
 <body>
@@ -371,13 +485,16 @@
   <!-- ══ LOBİ ══ -->
   <div id="screen-lobby" class="screen active">
     <div class="card">
-      <div class="card-title">Otaqdakılar</div>
+      <div class="card-title-row">
+        <div class="card-title">👥 Otaqdakılar</div>
+        <div class="lobby-count-pill" id="lobby-count-pill">0 nəfər</div>
+      </div>
       <div class="player-list" id="lobby-players"></div>
     </div>
 
     <!-- Host: Rol konfiqurasiyası -->
     <div class="card" id="config-card" style="display:none">
-      <div class="card-title">Rol Konfiqurasiyası</div>
+      <div class="card-title">🎭 Rol Konfiqurasiyası</div>
       <div class="config-grid" id="config-grid"></div>
       <div class="config-total" id="config-total" style="margin-top:12px"></div>
       <button class="btn btn-yellow" style="margin-top:12px" onclick="saveConfig()">Konfiqurasiyanı Saxla</button>
@@ -385,21 +502,24 @@
 
     <!-- Host: Başlat -->
     <div id="owner-start" style="display:none">
-      <button class="btn btn-primary" id="btn-start" onclick="startGame()">Oyunu Başlat</button>
+      <div class="lobby-progress-wrap"><div class="lobby-progress-bar" id="lobby-progress-bar" style="width:0%;background:var(--accent)"></div></div>
+      <button class="btn btn-primary" id="btn-start" style="margin-top:12px" onclick="startGame()">🎮 Oyunu Başlat</button>
       <p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:8px" id="start-hint"></p>
     </div>
 
     <!-- Non-host: Gözlə -->
     <div id="guest-wait" style="display:none">
-      <div class="card" style="text-align:center;color:var(--muted);font-size:.88rem;padding:16px">
-        Sahibin oyunu başlatmasını gözləyin...
+      <div class="card lobby-wait-hint">
+        <span class="wait-icon">🎭</span>
+        <span>Otaq sahibinin oyunu başlatmasını gözləyirik<span class="wait-dots"><span>.</span><span>.</span><span>.</span></span></span>
       </div>
     </div>
   </div>
 
   <!-- ══ ROL ══ -->
   <div id="screen-role" class="screen">
-    <div class="card role-card" id="role-card">
+    <div class="card role-card role-card-flip" id="role-card">
+      <div class="role-countdown" id="role-countdown">5</div>
       <div class="role-icon" id="role-icon">🃏</div>
       <div class="role-side-badge" id="role-side-badge"></div>
       <div class="role-name" id="role-name"></div>
@@ -407,7 +527,8 @@
       <div class="role-objective" id="role-objective"></div>
       <div class="mafia-team-box" id="mafia-team-box" style="display:none"></div>
     </div>
-    <button class="btn btn-confirm" onclick="ackRole()">Anladım, davam et →</button>
+    <div class="timer-wrap" style="margin-top:14px"><div class="timer-bar" id="role-bar" style="width:100%"></div></div>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="ackRole()">Keç →</button>
   </div>
 
   <!-- ══ GECƏ ══ -->
@@ -527,6 +648,7 @@ let hasVoted     = false;
 let hasNominated = false;
 let elimMode     = false;
 let timers       = {};
+let pendingPhaseEvent = null; // rol kartı bitənə qədər saxlanan faza hadisəsi (base oyun)
 
 // ── Solo mode ────────────────────────────────────────────────
 const _soloRaw   = sessionStorage.getItem('soloData');
@@ -760,6 +882,10 @@ socket.on('phase:night', ({ players, roundNum }) => {
       window._pendingNightPlayers = { players, roundNum };
       return;
     }
+  } else if (isRoleScreenActive()) {
+    // Rol kartı hələ göstərilir (5 saniyəlik ekran) — gecəni onun bitməsinə qədər saxla
+    pendingPhaseEvent = () => showNightScreen(players, false, roundNum);
+    return;
   }
   showNightScreen(players, false, roundNum);
   if (isSoloMode) soloStartNight(players);
@@ -866,25 +992,41 @@ function showScreen(name) {
 }
 
 // ── LOBİ ─────────────────────────────────────────────────────
+// Sabit rəng paleti — oyunçu adına görə avatarın halqa rəngini seçmək üçün
+const LOBBY_AVATAR_HUES = ['#c9392c','#2980b9','#27ae60','#e67e22','#9b59b6','#e8643a','#16a085','#c0392b'];
+function nameHue(name){
+  let h = 0;
+  for (let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+  return LOBBY_AVATAR_HUES[h % LOBBY_AVATAR_HUES.length];
+}
+
 function updateLobby({ players, owner }) {
   const list = document.getElementById('lobby-players');
-  list.innerHTML = players.map(p => {
+  list.innerHTML = players.map((p, i) => {
     const badges = [];
-    if (p.id === owner)    badges.push('<span class="badge b-owner">Sahib</span>');
+    if (p.id === owner)    badges.push('<span class="badge b-owner">👑 Sahib</span>');
     if (p.id === socket.id) badges.push('<span class="badge b-you">Sən</span>');
     if (!p.connected)      badges.push('<span class="badge b-offline">Offline</span>');
-    return `<div class="player-item ${!p.connected?'offline':''}">
-      <div class="avatar">${p.name[0].toUpperCase()}</div>
-      <div class="pname">${p.name}</div>
+    const hue = nameHue(p.name);
+    return `<div class="player-item ${!p.connected?'offline':''}" style="animation-delay:${i*45}ms">
+      <div class="avatar-wrap">
+        <div class="avatar" style="background:linear-gradient(135deg,${hue},var(--accent2))">${p.name[0].toUpperCase()}</div>
+        <span class="status-dot ${p.connected?'':'off'}"></span>
+      </div>
+      <div class="pname">${p.name}${p.id===socket.id ? ' <span class="you-tag">(sən)</span>' : ''}</div>
       <div class="badges">${badges.join('')}</div>
     </div>`;
   }).join('');
+
+  const countPill = document.getElementById('lobby-count-pill');
+  if (countPill) countPill.textContent = `${players.length} nəfər`;
 
   const ownerStart = document.getElementById('owner-start');
   const guestWait  = document.getElementById('guest-wait');
   const configCard = document.getElementById('config-card');
   const btnStart   = document.getElementById('btn-start');
   const hint       = document.getElementById('start-hint');
+  const progBar    = document.getElementById('lobby-progress-bar');
 
   if (isOwner) {
     ownerStart.style.display = 'block';
@@ -896,7 +1038,12 @@ function updateLobby({ players, owner }) {
     btnStart.disabled = !ok;
     hint.textContent  = players.length < 4
       ? `Minimum 4 oyunçu lazımdır (${players.length}/4)`
-      : ok ? `${players.length} oyunçu hazırdır` : `Rol sayı (${total}) oyunçu sayına (${players.length}) bərabər olmalıdır`;
+      : ok ? `✅ ${players.length} oyunçu hazırdır` : `Rol sayı (${total}) oyunçu sayına (${players.length}) bərabər olmalıdır`;
+    if (progBar) {
+      const pct = Math.min(100, players.length < 4 ? (players.length/4*100) : (ok ? 100 : 70));
+      progBar.style.width = pct + '%';
+      progBar.style.background = ok ? 'linear-gradient(90deg,#1a7a40,var(--green))' : 'linear-gradient(90deg,var(--accent),var(--accent2))';
+    }
   } else {
     ownerStart.style.display = 'none';
     guestWait.style.display  = 'block';
@@ -1019,13 +1166,56 @@ function showRoleScreen(role, roleName, mafiaTeam) {
     else                          hbadge.classList.add('hrb-neutral');
   }
 
+  // Kart animasiyasını hər dəfə təzədən oynat
+  const cardEl = document.getElementById('role-card');
+  cardEl.classList.remove('role-card-flip');
+  void cardEl.offsetWidth;
+  cardEl.classList.add('role-card-flip');
+
   showScreen('role');
+  startRoleTimer();
+}
+
+let roleAckDone = false;
+function startRoleTimer() {
+  roleAckDone = false;
+  stopTimer('role');
+  const total = 5;
+  let rem = total;
+  const bar   = document.getElementById('role-bar');
+  const cd    = document.getElementById('role-countdown');
+  if (bar) bar.style.width = '100%';
+  if (cd)  cd.textContent  = rem;
+  timers['role'] = setInterval(() => {
+    rem--;
+    if (bar) bar.style.width = Math.max(0, rem / total * 100) + '%';
+    if (cd)  cd.textContent  = Math.max(0, rem);
+    if (rem <= 0) {
+      stopTimer('role');
+      ackRole();
+    }
+  }, 1000);
+}
+
+function isRoleScreenActive() {
+  const el = document.getElementById('screen-role');
+  return !!el && el.classList.contains('active');
 }
 
 function ackRole() {
+  if (roleAckDone) return;
+  roleAckDone = true;
+  stopTimer('role');
   // Solo modda bu düymə soloShowAllRoles overlay-indən çağrılır — oradan handle edilir
-  // Normal oyunda gecə ekranına keç
-  if (!isSoloMode) showScreen('night');
+  if (isSoloMode) return;
+  // Gecə hadisəsi rol kartı göstərilərkən artıq gəlibsə, indi icra et
+  if (pendingPhaseEvent) {
+    const fn = pendingPhaseEvent;
+    pendingPhaseEvent = null;
+    fn();
+  } else {
+    showScreen('night');
+  }
 }
 
 // ── GECƏ ekranı ──────────────────────────────────────────────
@@ -1086,10 +1276,11 @@ function showNightScreen(players, resume, roundNum) {
     document.getElementById('night-action-title').textContent = titles[myRole] || 'Hədəfini seç';
 
     const targets = players.filter(p => p.alive && p.id !== socket.id);
-    document.getElementById('night-players').innerHTML = targets.map(p =>
-      `<div class="player-item clickable" data-id="${p.id}" onclick="selectNightTarget(this,'${p.id}')">
+    document.getElementById('night-players').innerHTML = targets.map((p,i) =>
+      `<div class="player-item clickable" data-id="${p.id}" style="animation-delay:${i*45}ms" onclick="selectNightTarget(this,'${p.id}')">
         <div class="avatar">${p.name[0].toUpperCase()}</div>
         <div class="pname">${p.name}</div>
+        <div class="night-check">✓</div>
       </div>`).join('');
     document.getElementById('btn-night-confirm').disabled = true;
     document.getElementById('btn-night-confirm').textContent = 'Təsdiqlə';
@@ -1140,15 +1331,15 @@ function showDayScreen(killed, players, resume, roundNum) {
   const myPlayer = players.find(p => p.id === socket.id);
   const iAmAlive = myPlayer?.alive !== false;
 
-  document.getElementById('day-players').innerHTML = players.map(p => {
+  document.getElementById('day-players').innerHTML = players.map((p,i) => {
     const dead = !p.alive;
     const isMe = p.id === socket.id;
     const clickable = iAmAlive && !dead && !isMe;
     return `<div class="player-item ${dead?'dead':''} ${clickable?'clickable':''}"
-      data-id="${p.id}" ${clickable?`onclick="selectDayTarget(this,'${p.id}')"`:''}>
+      data-id="${p.id}" style="animation-delay:${i*45}ms" ${clickable?`onclick="selectDayTarget(this,'${p.id}')"`:''}>
       <div class="avatar ${dead?'dead-av':''}">${p.name[0].toUpperCase()}</div>
       <div class="pname">${p.name}${isMe?' (sən)':''}</div>
-      ${dead ? '<span class="badge b-dead">Ölü</span>' : ''}
+      ${dead ? '<span class="badge b-dead">Ölü</span>' : '<div class="day-check">✓</div>'}
     </div>`;
   }).join('');
 
@@ -1180,14 +1371,15 @@ function showVoteScreen(players, resume) {
   const myPlayer = players.find(p => p.id === socket.id);
   const iAmAlive = myPlayer?.alive !== false;
 
-  document.getElementById('vote-players').innerHTML = players.filter(p=>p.alive).map(p => {
+  document.getElementById('vote-players').innerHTML = players.filter(p=>p.alive).map((p,i) => {
     const isMe = p.id === socket.id;
     const clickable = iAmAlive && !isMe;
     return `<div class="player-item ${clickable?'clickable':''}" id="vi-${p.id}"
-      data-id="${p.id}" ${clickable?`onclick="selectVoteTarget(this,'${p.id}')"`:''}>
+      data-id="${p.id}" style="animation-delay:${i*45}ms" ${clickable?`onclick="selectVoteTarget(this,'${p.id}')"`:''}>
       <div class="avatar">${p.name[0].toUpperCase()}</div>
       <div class="pname">${p.name}${isMe?' (sən)':''}</div>
       <div class="badges"><span class="badge b-votes" id="vbadge-${p.id}">0</span></div>
+      <div class="vote-check">✓</div>
     </div>`;
   }).join('');
 
@@ -1884,8 +2076,15 @@ function stopAllTimers()  { Object.keys(timers).forEach(stopTimer); }
 
 // ── Utils ────────────────────────────────────────────────────
 function copyCode() {
-  navigator.clipboard.writeText(roomCode)
-    .then(() => toast('📋 Kod kopyalandı: ' + roomCode));
+  navigator.clipboard.writeText(roomCode).then(() => {
+    toast('📋 Kod kopyalandı: ' + roomCode);
+    const el = document.getElementById('header-code');
+    if (el) {
+      const original = el.textContent;
+      el.textContent = '✓ Kopyalandı';
+      setTimeout(() => { el.textContent = original; }, 1200);
+    }
+  });
 }
 function goHome() { sessionStorage.clear(); window.location.href = '/'; }
 
